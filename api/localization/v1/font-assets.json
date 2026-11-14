@@ -1,0 +1,557 @@
+{
+  "fonts": [
+    {
+      "family": "Noto Sans",
+      "font": {
+        "sha256": "bfb7bb691513f12e734dc346c03a03f784912432d7e3fa8e56efcf906fe86b3d",
+        "size_bytes": 2049096,
+        "upstream_commit": "8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5",
+        "upstream_path": "ofl/notosans/NotoSans[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/notosans/NotoSans%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosans",
+      "license": {
+        "sha256": "cee9892f9f0cc8fe882c9e9537ee6a89621d86ee7ceaf70b02e2b2b1c25c061a",
+        "size_bytes": 4396,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5",
+        "upstream_path": "ofl/notosans/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/notosans/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans SC",
+      "font": {
+        "sha256": "a3041811a78c361b1de50f953c805e0244951c21c5bd412f7232ef0d899af0da",
+        "size_bytes": 17772300,
+        "upstream_commit": "a85815a42757630ce188fdad368c2dfc444d4773",
+        "upstream_path": "ofl/notosanssc/NotoSansSC[wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/a85815a42757630ce188fdad368c2dfc444d4773/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosanssc",
+      "license": {
+        "sha256": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9",
+        "size_bytes": 4388,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "a85815a42757630ce188fdad368c2dfc444d4773",
+        "upstream_path": "ofl/notosanssc/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/a85815a42757630ce188fdad368c2dfc444d4773/ofl/notosanssc/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Arabic",
+      "font": {
+        "sha256": "63111b5b2e074dd48cc67692e0a2726d86ee94c1c37fe8598257b7b4e87e869e",
+        "size_bytes": 844676,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansarabic/NotoSansArabic[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansarabic/NotoSansArabic%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansarabic",
+      "license": {
+        "sha256": "07fc70bfeb985cc1a87a8587d0a0c80bab11c86c9dc3fd95b6f0cb332f983e96",
+        "size_bytes": 4382,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansarabic/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansarabic/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Armenian",
+      "font": {
+        "sha256": "0870908d8318435a5daf1cd280ae15063f990cd9ad60f3e94c734ce9e1ffef71",
+        "size_bytes": 221936,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansarmenian/NotoSansArmenian[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansarmenian/NotoSansArmenian%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansarmenian",
+      "license": {
+        "sha256": "0468358b316f69f405b55cadf8a8314e16e3610b8feaad96772bd5d968112d02",
+        "size_bytes": 4384,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansarmenian/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansarmenian/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Bengali",
+      "font": {
+        "sha256": "dcd42978094e584a849c84a51450eeac40c8826057d566ea6d4b9627a403a05a",
+        "size_bytes": 463668,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansbengali/NotoSansBengali[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansbengali/NotoSansBengali%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansbengali",
+      "license": {
+        "sha256": "754f0e221aa7d5a915489f3bf1f20fe53ddc35ab2834a4d91656d78f9622de70",
+        "size_bytes": 4383,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansbengali/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansbengali/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Devanagari",
+      "font": {
+        "sha256": "14ec4af41f27482216d1c2229f417ff9b1425e1babb014e57d1d40d03229853e",
+        "size_bytes": 641944,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansdevanagari/NotoSansDevanagari[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansdevanagari/NotoSansDevanagari%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansdevanagari",
+      "license": {
+        "sha256": "a216f6f8d85c7228093e0ee5e258d9d377e6671f68acb4db1930b29583d0f331",
+        "size_bytes": 4386,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansdevanagari/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansdevanagari/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Ethiopic",
+      "font": {
+        "sha256": "0dbccc00b22d180ebd6a4bd8a733918a29e709fa6798023adc3e6cd40da65077",
+        "size_bytes": 1143168,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansethiopic/NotoSansEthiopic[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansethiopic/NotoSansEthiopic%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansethiopic",
+      "license": {
+        "sha256": "72606b23f312cb25973958f2892d4d2c2012deabadbf0f763232624a9649fc69",
+        "size_bytes": 4384,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansethiopic/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansethiopic/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Georgian",
+      "font": {
+        "sha256": "dc591156f36842d38996c4a7a17fee9bb58e45da3e2cac7a31b7d33de700adb9",
+        "size_bytes": 231988,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansgeorgian/NotoSansGeorgian[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansgeorgian/NotoSansGeorgian%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansgeorgian",
+      "license": {
+        "sha256": "8c02263c5d73d40544f9ed91e30c4e947407057a3cc430d7b786189aeceff6df",
+        "size_bytes": 4384,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansgeorgian/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansgeorgian/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Gujarati",
+      "font": {
+        "sha256": "9901d8552f1dd5d2c50dbd4caa6f6e174e74e8264f06594ab259ae6e7b1ac428",
+        "size_bytes": 672904,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansgujarati/NotoSansGujarati[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansgujarati/NotoSansGujarati%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansgujarati",
+      "license": {
+        "sha256": "c0b88977aa18b5e4fd05d646d560da89fde61b6581fa4507cb00dd90bd1bf7d4",
+        "size_bytes": 4384,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansgujarati/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansgujarati/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Gurmukhi",
+      "font": {
+        "sha256": "1e6f728fa620e566f842d81e220265813faa12771214765d289c98e035adc5f2",
+        "size_bytes": 268608,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansgurmukhi/NotoSansGurmukhi[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansgurmukhi/NotoSansGurmukhi%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansgurmukhi",
+      "license": {
+        "sha256": "3f7451b7e2c8381be0c5712f7b0dd5c2d75fe787ae16a99f18b7fa45627a0fde",
+        "size_bytes": 4384,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansgurmukhi/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansgurmukhi/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Hebrew",
+      "font": {
+        "sha256": "7ef36a2c3593758cdb622e1bdef4f84523e92fbc3ccc667438dd80ff54c2de88",
+        "size_bytes": 112640,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanshebrew/NotoSansHebrew[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanshebrew/NotoSansHebrew%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosanshebrew",
+      "license": {
+        "sha256": "9b9fe028b5ba74d231659a1bbaf0ed09b11e759d1ca6a070999e16d151616b47",
+        "size_bytes": 4382,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanshebrew/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanshebrew/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans JP",
+      "font": {
+        "sha256": "c2f3b4d463500a2ddcd3849cded1fceeb9fd6d1c32e6cbecd568453ba50fc68f",
+        "size_bytes": 9589900,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansjp/NotoSansJP[wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansjp",
+      "license": {
+        "sha256": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9",
+        "size_bytes": 4388,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansjp/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansjp/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Kannada",
+      "font": {
+        "sha256": "cca4f3b3a8cb12fb261f1b43baf5d2f7f59d90fe123d41f0065ed3a183997ec9",
+        "size_bytes": 641372,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanskannada/NotoSansKannada[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanskannada/NotoSansKannada%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosanskannada",
+      "license": {
+        "sha256": "9d49a4e56df9b36403b139f48bf07fd87cc5e716cb3203c54b04b674adb16238",
+        "size_bytes": 4383,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanskannada/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanskannada/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Khmer",
+      "font": {
+        "sha256": "f37a8431a0c5d5ed2f81a767417546aca576a81fb7eff9c924d46aecf828f2ca",
+        "size_bytes": 359788,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanskhmer/NotoSansKhmer[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanskhmer/NotoSansKhmer%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosanskhmer",
+      "license": {
+        "sha256": "be0407f060aea48787ff9e75d8d3aedef70aef113b3ce9aca26fdaacd10b1870",
+        "size_bytes": 4381,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanskhmer/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanskhmer/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans KR",
+      "font": {
+        "sha256": "194018e6b2b293a7964f037b25c0249ce1418bc9ab3c971060a03aa57861e252",
+        "size_bytes": 10414588,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanskr/NotoSansKR[wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanskr/NotoSansKR%5Bwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosanskr",
+      "license": {
+        "sha256": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9",
+        "size_bytes": 4388,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanskr/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanskr/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Lao",
+      "font": {
+        "sha256": "9608b94603a82d09a8038946f9775242f99e3b3459b7f1e4d5b335b578cd7ab3",
+        "size_bytes": 176620,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanslao/NotoSansLao[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanslao/NotoSansLao%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosanslao",
+      "license": {
+        "sha256": "a42993999944845fb5af693ea678a372a053db1f0981d55e911dcfa9d330f279",
+        "size_bytes": 4379,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanslao/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanslao/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Malayalam",
+      "font": {
+        "sha256": "312e0e7c3cc15fa09eb42a8f749eeb246b593ed420e3c81aafe8d910c3a6fb56",
+        "size_bytes": 504204,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansmalayalam/NotoSansMalayalam[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansmalayalam/NotoSansMalayalam%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansmalayalam",
+      "license": {
+        "sha256": "1df18163a0bf60f02131401ba1609df90051f40c4047684dda1c8a2e9586f7f2",
+        "size_bytes": 4385,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansmalayalam/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansmalayalam/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Myanmar",
+      "font": {
+        "sha256": "7abbbfbe2514105d7ce94937aee3feb2ba89b73a256c8b77b5866bd9b83e32ec",
+        "size_bytes": 784832,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansmyanmar/NotoSansMyanmar[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansmyanmar/NotoSansMyanmar%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansmyanmar",
+      "license": {
+        "sha256": "246a75859267af7da466823969d2e2b407ed8455ee5f74f4c8d63d8783be9b57",
+        "size_bytes": 4383,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansmyanmar/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansmyanmar/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Oriya",
+      "font": {
+        "sha256": "910342275d619081b896b4ed25fd9ad6ff320c25591b810de1fcc4beb153ba82",
+        "size_bytes": 613116,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansoriya/NotoSansOriya[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansoriya/NotoSansOriya%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansoriya",
+      "license": {
+        "sha256": "c90ff15ade263a49148e35af34e9c177c6d56881e81260b29f10123e9e227eca",
+        "size_bytes": 4381,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansoriya/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansoriya/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Sinhala",
+      "font": {
+        "sha256": "9bd93e407a278075be403324063bc94a7e306c44de4df81214e932330c22eecf",
+        "size_bytes": 1181956,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanssinhala/NotoSansSinhala[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanssinhala/NotoSansSinhala%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosanssinhala",
+      "license": {
+        "sha256": "2d6f7c43bce61f4b1919379f901bc613484f5285f520b6d29bb7c1f31b17e841",
+        "size_bytes": 4383,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanssinhala/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanssinhala/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Tamil",
+      "font": {
+        "sha256": "aa3a9b321f4b0bb2c40203ffbde9af89713227866e0e13f76e5b9eeea727cf88",
+        "size_bytes": 340668,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanstamil/NotoSansTamil[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanstamil/NotoSansTamil%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosanstamil",
+      "license": {
+        "sha256": "f8ff8ce7d0a81bf8d5e121c635ef027250c531f2fd37d5988b8dd6e45f19d7f1",
+        "size_bytes": 4381,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanstamil/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanstamil/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans TC",
+      "font": {
+        "sha256": "864727d210d54f2537bbe23b3a839436c3992af72de9322af5270897246bd44f",
+        "size_bytes": 11941968,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanstc/NotoSansTC[wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanstc/NotoSansTC%5Bwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosanstc",
+      "license": {
+        "sha256": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9",
+        "size_bytes": 4388,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanstc/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanstc/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Telugu",
+      "font": {
+        "sha256": "e618af7bf999df192ed4f388eba2e563f2b5015034e9cbb317b5bd793bd7334d",
+        "size_bytes": 888808,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanstelugu/NotoSansTelugu[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanstelugu/NotoSansTelugu%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosanstelugu",
+      "license": {
+        "sha256": "481c72a8f1b4f645a7e6b10326be41b2da2c15cb470ff48a07fab773eed00102",
+        "size_bytes": 4382,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosanstelugu/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosanstelugu/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Thai",
+      "font": {
+        "sha256": "5a1c559bb539583c8a1fd99d1c5b9491e5e14478c9cd2bd0970d5c3096cc9ef8",
+        "size_bytes": 218652,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansthai/NotoSansThai[wdth,wght].ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansthai/NotoSansThai%5Bwdth%2Cwght%5D.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansthai",
+      "license": {
+        "sha256": "2e98fd23a52d253db8612cd5942c8f2ff4111b21d2367050fdca91d8ccc374a0",
+        "size_bytes": 4380,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansthai/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansthai/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "100 900"
+    },
+    {
+      "family": "Noto Sans Math",
+      "font": {
+        "sha256": "3f495fe933c06786e4d5f6d86b8ee70b6753a68ee3b9d87528726de0f6e2c47d",
+        "size_bytes": 1015396,
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansmath/NotoSansMath-Regular.ttf",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansmath/NotoSansMath-Regular.ttf"
+      },
+      "format": "truetype",
+      "key": "notosansmath",
+      "license": {
+        "sha256": "403a95275b469061b7d4371c328e0ada3bc7d63328abe2e88aad5cd243b2fe21",
+        "size_bytes": 4380,
+        "spdx": "OFL-1.1",
+        "upstream_commit": "45e3d5269e4a17d823f6d84470bc084dc5ae46f6",
+        "upstream_path": "ofl/notosansmath/OFL.txt",
+        "url": "https://raw.githubusercontent.com/google/fonts/45e3d5269e4a17d823f6d84470bc084dc5ae46f6/ofl/notosansmath/OFL.txt"
+      },
+      "style": "normal",
+      "weight": "400"
+    }
+  ],
+  "kind": "projectone-pinned-localization-fonts-v1",
+  "schema_version": 1,
+  "scope": "Original upstream bytes only. Runtime compatibility, exact cmap and shaping are evaluated separately."
+}

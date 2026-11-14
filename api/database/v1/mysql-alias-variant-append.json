@@ -1,0 +1,25 @@
+{
+  "format": "projectone.mysql.append-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "665a101e3944e01580161788838574fafa145be642de61aa47c434eb3943550e",
+  "after_step": 147,
+  "steps": [
+    {
+      "step": 148,
+      "file": "000148_deployment_model_variant.sql",
+      "object": "deployments",
+      "kind": "alter_table",
+      "source_sha256": "ba9e26b472ee7db3c900927eea9fc2377a80364e22dc2c297c09dcee95ee65c5",
+      "previous_definition_sha256": "7f41f97c413d88bb102206e59bd5a7dc4be77e6774996c528191e0b5dad9c536"
+    },
+    {
+      "step": 149,
+      "file": "000149_deployment_model_identity.sql",
+      "object": "deployment_model_identity",
+      "kind": "create_trigger",
+      "source_sha256": "1d56bde1f7aff993f6bf0468e3a02acf44a8dd3e16c958d27fae6df1a0697995",
+      "table": "deployments",
+      "event": "UPDATE"
+    }
+  ]
+}

@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Operator-observed native DM artifact inventory",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format_version",
+    "architecture",
+    "library_directory",
+    "driver_file",
+    "license_file",
+    "driver_version",
+    "dbms_name",
+    "dbms_version",
+    "files"
+  ],
+  "properties": {
+    "format_version": {
+      "enum": [
+        1,
+        2
+      ]
+    },
+    "architecture": {
+      "enum": [
+        "arm64",
+        "amd64"
+      ]
+    },
+    "library_directory": {
+      "type": "string",
+      "pattern": "^/[^\\u0000\\r\\n]+$",
+      "description": "Canonical absolute path; runtime additionally rejects links and enforces private ownership."
+    },
+    "driver_file": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$"
+    },
+    "license_file": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$"
+    },
+    "driver_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "dbms_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "dbms_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "files": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "bytes",
+          "sha256"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._+-]{0,127}$",
+            "not": {
+              "enum": [
+                "libc.so.6",
+                "libm.so.6",
+                "libpthread.so.0",
+                "libdl.so.2",
+                "librt.so.1",
+                "ld-linux-x86-64.so.2",
+                "ld-linux-aarch64.so.1"
+              ]
+            }
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1073741824
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        }
+      }
+    },
+    "loader_profile": {
+      "type": "string",
+      "enum": [
+        "dm_relative_release_v1"
+      ]
+    }
+  },
+  "description": "Runtime requires exact flat private inventory, distinct listed driver and license, unique names and at most 2 GiB total. Template is intentionally invalid until replaced by real observed metadata. In manifest2 only, libodbcinst.so may be a regular single-link byte-identical copy of inventoried libodbcinst.so.2; runtime enforces equal size/SHA256 and all ordinary native-file checks. Neither file may be the license.",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "format_version": {
+            "const": 2
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "loader_profile"
+        ],
+        "properties": {
+          "library_directory": {
+            "pattern": "/bin$"
+          },
+          "files": {
+            "items": {
+              "properties": {
+                "name": {
+                  "not": {
+                    "const": "dependencies"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "not": {
+          "required": [
+            "loader_profile"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "files": {
+            "contains": {
+              "properties": {
+                "name": {
+                  "const": "libodbcinst.so"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "format_version": {
+            "const": 2
+          },
+          "license_file": {
+            "not": {
+              "enum": [
+                "libodbcinst.so",
+                "libodbcinst.so.2"
+              ]
+            }
+          },
+          "files": {
+            "contains": {
+              "properties": {
+                "name": {
+                  "const": "libodbcinst.so.2"
+                }
+              },
+              "required": [
+                "name"
+              ]
+            }
+          }
+        }
+      }
+    }
+  ]
+}

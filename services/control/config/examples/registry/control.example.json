@@ -1,0 +1,35 @@
+{
+  "endpoint": "https://registry.internal.example.invalid:5000",
+  "allowed_cidrs": [
+    "10.0.0.0/8"
+  ],
+  "ca_file": "/run/projectone/registry/ca.pem",
+  "credential_file": "/run/projectone/registry/credential.json",
+  "store_root": "/srv/projectone/registry-root/cas",
+  "prepared_release_root": "/srv/projectone/registry-root/prepared",
+  "release_archive_sha256": "",
+  "release_manifest_sha256": "",
+  "verification": {
+    "maximum_manifest_bytes": 1048576,
+    "maximum_assets": 512,
+    "maximum_asset_bytes": 34359738368,
+    "maximum_total_bytes": 68719476736,
+    "maximum_metadata_bytes": 4194304,
+    "maximum_archive_entries": 16384,
+    "allow_test_fixture": false,
+    "mount_root": "/srv/projectone/registry-root",
+    "trust_file": "/run/projectone/release-trust.json"
+  },
+  "maximum_archive_bytes": 68719476736,
+  "maximum_expanded_bytes": 68719476736,
+  "maximum_blob_bytes": 34359738368,
+  "maximum_retained_bytes": 137438953472,
+  "maximum_pins": 64,
+  "maximum_references": 4096,
+  "maximum_concurrent_imports": 1,
+  "minimum_headroom_percent": 30,
+  "operation_seconds": 3600,
+  "request_seconds": 120,
+  "grant_seconds": 900,
+  "page_size": 50
+}

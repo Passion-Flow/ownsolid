@@ -1,0 +1,20 @@
+CREATE TABLE model_versions (
+    id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+    tenant_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    workspace_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    model_key VARCHAR(64) NOT NULL CHECK(model_key='qwen3-0.6b'),
+    catalog_digest VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL CHECK(REGEXP_LIKE(catalog_digest,'^[a-f0-9]{64}$','c')),
+    manifest JSON NOT NULL,
+    state VARCHAR(16) NOT NULL CHECK(state IN('ready','deleted')),
+    created_by CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    deleted_at DATETIME(6),
+    ready_catalog_digest VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin GENERATED ALWAYS AS(CASE WHEN state='ready' THEN catalog_digest ELSE NULL END) STORED,
+    UNIQUE KEY model_scope_identity(tenant_id,workspace_id,id),
+    UNIQUE KEY model_ready_catalog_idx(tenant_id,workspace_id,ready_catalog_digest),
+    FOREIGN KEY(tenant_id,workspace_id) REFERENCES workspaces(tenant_id,id),
+    FOREIGN KEY(created_by) REFERENCES users(id),
+    CHECK(JSON_TYPE(manifest)='OBJECT' AND OCTET_LENGTH(CAST(manifest AS CHAR CHARACTER SET utf8mb4))<=16384),
+    CONSTRAINT model_versions_id_canonical CHECK(REGEXP_LIKE(id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;

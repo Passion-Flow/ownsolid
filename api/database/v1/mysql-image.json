@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "repository": "container-registry.oracle.com/mysql/community-server",
+  "version": "8.4.12",
+  "source": "https://dev.mysql.com/doc/relnotes/mysql/8.4/en/news-8-4-12.html",
+  "inspected_at": "2026-10-19",
+  "platforms": {
+    "linux-amd64": {
+      "manifest_digest": "sha256:7dcc4add9183664de3a214daf85a50c3ba6cccfd7534f700b6561bf5b41885be",
+      "config_digest": "sha256:c9570e7b94230d3717b88a334acaea49a4fe6b162f68a8f2927eaaf866b7f867",
+      "compressed_layer_bytes": 268833710
+    }
+  },
+  "qualification": "Official public Oracle registry tag/manifest/config metadata only. Image pull/full blob verification/execution/SQL/native target qualification not yet performed. Linuxamd64 execution on this Mac is explicit emulation, never silently arm64.",
+  "entrypoint_secret_reference": "MYSQL_ROOT_PASSWORD accepts a protected container file path; do not assume Docker Library _FILE interface.",
+  "retained_refusals": [
+    {
+      "repository": "docker.io/library/mysql",
+      "tag": "8.4.12",
+      "result": "actual_registry_not_found"
+    },
+    {
+      "repository": "docker.io/library/mysql",
+      "tag": "8.4.11",
+      "result": "available_but_not_selected_instead_of_newer_documented_Docker_security_update"
+    }
+  ]
+}

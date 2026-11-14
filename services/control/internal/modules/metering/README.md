@@ -1,0 +1,122 @@
+# Usage metering
+
+A trusted producer supplies an immutable event and separately supplies the
+tenant and workspace authorized in its PostgreSQL transaction. Append the
+event with the source state or acknowledge the durable outbox message only
+after commit. Use the same producer and event IDs on retry. Totals use the
+event's original occurrence time and exact integer units.
+
+Set `OWNSOLID_METERING_TEST_DSN_FILE` to a protected DSN file for a disposable
+local PostgreSQL database whose name ends in `_test`. The tests create and
+remove a private schema using the candidate ledger DDL.
+
+```sh
+go -C services/control test -race ./internal/modules/metering -count=1
+go -C services/control test -race -tags repository_integration ./internal/modules/metering -run TestPostgresLedgerCommitAcknowledgementLoss -count=1
+```
+
+The second command uses the PostgreSQL wire fault harness with an isolated
+plaintext loopback endpoint. The candidate schema is exercised in tests.
+The installation migration and real producers are tracked in the
+[ledger research](../../../../../docs/research/usage-ledger.md).
+
+`DecodeRateCard` validates installation-owned JSON with one `currency` and
+effective `versions`. Each version has an `id`, microsecond-aligned RFC 3339
+`effective_at` and explicit `rates` array. Each rate has a ledger `meter`,
+positive base `units` and explicit nonnegative `amount_micros`. One million
+amount micros equal one currency unit. Retain earlier versions when adding a
+new one.
+
+`ShowbackWithin` reads an authorized workspace in a read-only PostgreSQL
+REPEATABLE READ transaction. It uses the original occurrence time, returns
+rounded amounts as decimal integer strings and flags unpriced usage. The
+report is for internal showback. See [showback research](../../../../../docs/research/metering-showback.md).
+
+`BudgetWithin` compares one authorized workspace period against an
+operator's currency, limit in amount micros and warning in basis points.
+Use the whole budget period in one snapshot. A known subtotal that reaches
+the limit takes precedence over unrated usage. Below the limit, missing
+rates leave the assessment indeterminate. See [budget status research](../../../../../docs/research/metering-budget-status.md).
+
+`ReadWorkspaceReport` uses the Workspace owner's selected PostgreSQL
+repository, live session recheck and membership fence. Pass the
+server-authenticated actor, workspace selector and installed policies.
+A workspace owner or current Admin platform session receives the report
+with optional budget status from the same ledger query.
+
+To verify this path, also set `PROJECT_ONE_TEST_DSN_FILE` to a protected
+loopback DSN for the isolated PostgreSQL 18.6 test database. The current
+identity fixture needs the approved pgvector 0.8.7 extension in that
+database. It creates its own schema and applies the candidate ledger there.
+
+```sh
+go -C services/control test -race ./internal/modules/metering -run '^TestPostgresAuthenticatedWorkspaceReport$' -count=1
+```
+
+`AppendGatewayReceiptWithin` is the PostgreSQL intake for the gateway's
+canonical v1 acknowledgment. Call it from distribution Report in its
+existing transaction after persisting or verifying the receipt. Pass the
+machine scope, gateway ID and acknowledgment already verified by that path.
+The intake checks the exact persisted outcome and its digest. It records one
+request and, when measured, the receipt's total tokens at the persisted
+admission time. Roll back the owner transaction on error and acknowledge
+only after commit.
+
+A missing token measurement still contributes the request charge and an
+unmeasured-request count. Showback marks its known subtotal incomplete and
+budget status reports `unmeasured_usage` unless known charges reach the
+limit. A receipt with zero completion tokens can still contain measured
+prompt tokens. The generic append path reserves the gateway producer
+identity for the receipt intake.
+
+The disconnected PostgreSQL tests exercise receipt replay, scope, rollback,
+rate cutover and budget consistency. The candidate test schema includes the
+unmeasured-request column. Deploying the intake requires the production
+ledger and a call from the gateway owner. See the
+[transaction handoff](../../../../../docs/research/usage-ledger.md#gateway-receipt-intake).
+
+`PreviewWorkspaceBudgetAdmission` reuses the authorized report and accepts
+an explicit `BudgetAdmissionPolicy` from the policy owner. Set its mode to
+`alert_only` to preview alerts at the warning and limit. Set it to
+`deny_at_known_limit` to preview a denial only at the known limit, with an
+alert at the lower warning. Missing prices or measurements below the limit
+return an indeterminate action. A complete zero-priced report is clear.
+The result contains the same report and window used for its decision.
+
+The preview sends no alert and changes no admission or balance state.
+There is no production policy activation. With the protected PostgreSQL
+fixture inputs described above, run:
+
+```sh
+go -C services/control test -race -tags repository_integration ./internal/modules/metering -run 'TestPostgres(WorkspaceBudgetAdmissionPreview|GatewayReceiptProjectsVerifiedUsageAndBudget)$' -count=1
+```
+
+The unnumbered [up SQL](testdata/ledger.sql) and [down SQL](testdata/ledger.down.sql)
+form the PostgreSQL migration candidate. The existing local site and cell
+functions supply both stored coordinates. The insert trigger verifies them
+against the registry in the ledger's schema. Receipt intake verifies the
+source coordinates, and totals and showback read the local cell only. The
+down SQL requires a migration transaction and an empty ledger.
+
+With the protected fixture inputs above, verify the native schema 55 upgrade,
+foreign-cell refusal and the empty and nonempty downgrade behavior:
+
+```sh
+go -C services/control test -race -tags repository_integration ./internal/modules/metering -run 'TestPostgres(LedgerCandidate|GatewayReceiptProjectsVerifiedUsageAndBudget)' -count=1
+```
+
+Use the serving-role integration test with the same PostgreSQL fixture.
+Enable SCRAM on the fixture endpoint, including its socket when using a
+loopback relay. The test provisions the Control role through the installed
+runtime access path and verifies both the current business-table grant and
+the minimum ledger privileges.
+
+```sh
+go -C services/control test -race -tags repository_integration ./internal/modules/metering -run '^TestPostgresLedgerCandidateServingRole$' -count=1
+```
+
+The database owner assigns the formal migration number, table count, grants
+and catalog fingerprints. The optional gateway Report hook uses this SQL path
+and its existing authenticated arguments. See the
+[serving-role grants and rollback prerequisites](../../../../../docs/research/usage-ledger.md#serving-principal-and-ledger-grants)
+before activation.

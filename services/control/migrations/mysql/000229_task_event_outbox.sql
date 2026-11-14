@@ -1,0 +1,1 @@
+ALTER TABLE task_event_outbox ADD INDEX task_event_outbox_scope(tenant_id,workspace_id,node_id,created_at DESC,id DESC);

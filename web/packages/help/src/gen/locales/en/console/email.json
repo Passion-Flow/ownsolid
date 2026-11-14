@@ -1,0 +1,223 @@
+{
+ "type": "root",
+ "children": [
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "The installation sends invitations, password resets and notices of password changes through your\nmail server. "
+    },
+    {
+     "type": "link",
+     "url": "/mail",
+     "children": [
+      {
+       "type": "text",
+       "value": "Email"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": " shows each message's delivery."
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Delivery states"
+    }
+   ],
+   "data": {
+    "id": "delivery-states"
+   }
+  },
+  {
+   "type": "table",
+   "align": [
+    null,
+    null
+   ],
+   "children": [
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "State"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Meaning"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Waiting"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Waiting to be sent, or waiting for its next attempt."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Sending"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Being handed to the mail server now."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Sent"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "The mail server accepted it."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Failed"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Every attempt failed. The error says why, such as the mail server being unreachable."
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "type": "tableRow",
+     "children": [
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "Cancelled"
+        }
+       ]
+      },
+      {
+       "type": "tableCell",
+       "children": [
+        {
+         "type": "text",
+         "value": "It will not be sent."
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "heading",
+   "depth": 2,
+   "children": [
+    {
+     "type": "text",
+     "value": "Sending again"
+    }
+   ],
+   "data": {
+    "id": "sending-again"
+   }
+  },
+  {
+   "type": "paragraph",
+   "children": [
+    {
+     "type": "text",
+     "value": "Select failed messages and choose "
+    },
+    {
+     "type": "strong",
+     "children": [
+      {
+       "type": "text",
+       "value": "Send again"
+      }
+     ]
+    },
+    {
+     "type": "text",
+     "value": "; a new message is queued for each. An invitation can\nalso be revoked from here by typing its address."
+    }
+   ]
+  }
+ ]
+}

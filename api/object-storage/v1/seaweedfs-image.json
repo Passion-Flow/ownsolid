@@ -1,0 +1,15 @@
+{
+  "format": "projectone.object-storage.candidate-image.v1",
+  "version": "4.48",
+  "repository": "docker.io/chrislusf/seaweedfs",
+  "platform": "linux/arm64",
+  "manifest_digest": "sha256:f1f303474940e9e088edbd2c1658f7ac38cb0dd90f91a2b0a51916d74b8575a1",
+  "config_digest": "sha256:8f17c8c82e037886f6aaceb3f6282a5c2a1b52bbef5339d323b0067a75bbbc79",
+  "manifest_bytes": 2193,
+  "compressed_bytes": 184317585,
+  "binary": "/usr/bin/weed",
+  "qualification": "Unqualified local private-profile candidate; not claimed patched, target qualified or approved for complete-platform redistribution.",
+  "official_release": "https://github.com/seaweedfs/seaweedfs/releases/tag/4.48",
+  "official_license": "https://raw.githubusercontent.com/seaweedfs/seaweedfs/4.48/LICENSE",
+  "advisory": "https://github.com/seaweedfs/seaweedfs/security/advisories/GHSA-5fx4-c9qp-36jc"
+}

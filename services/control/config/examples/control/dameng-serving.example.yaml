@@ -1,0 +1,25 @@
+# Database-only fragment: replace the complete database mapping in an otherwise
+# valid control configuration. This is not a full deployment or qualified build.
+# Native selection requires the completed central catalog, restricted grants and
+# a real Linux native-driver artifact; generic images do not acquire that support.
+database:
+  # Control selected-database owner; explicit enum dameng, no native default.
+  # Env-file may repeat dameng but cannot switch into/out of this valid snapshot.
+  engine: dameng
+  dameng:
+    # Canonical absolute protected runtime connector JSON; required, no default.
+    # Distinct from schema reference. Connector owns password/native-artifact/socket
+    # references and pool/operation/cleanup policy. Never put credentials here.
+    # PROJECT_ONE_DAMENG_RUNTIME_CONFIGURATION_FILE in the explicit private
+    # --env-file overrides this valid reference; restart/new owner required.
+    runtime_configuration_file: /run/projectone/private/dameng-runtime.json
+    # Canonical absolute protected schema policy JSON; required, no default.
+    # Exact schema/runtime principal and readback budgets; never owner credentials.
+    # PROJECT_ONE_DAMENG_SCHEMA_CONFIGURATION_FILE maps here; same precedence,
+    # Compose/Helm private file projection and restart requirement as above.
+    schema_configuration_file: /run/projectone/private/dameng-schema.json
+    # Native serving owner; integer seconds1..300, optional default10. Nonsecret.
+    # PROJECT_ONE_DAMENG_READINESS_SECONDS overrides valid YAML; ambient ignored.
+    # Existing HTTP request/startup budgets bound audits; failure stops serving.
+    # Compose/Helm private policy mapping; restart required, no hot reload.
+    readiness_seconds: 10

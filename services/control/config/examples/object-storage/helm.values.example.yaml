@@ -1,0 +1,16 @@
+# Merge into the existing complete profile; these are actual current chart fields.
+# Owner: deployment operator. Optional protected policy basename; string, no runtime default;
+# secrets.files must include it. Existing typed --env-file overrides YAML; restart/rollout required.
+configuration:
+  policyEnvironmentFile: object-storage.env
+# Owner: storage operator. Optional object-staging slot; once selected both fields are required.
+# existingClaim names an existing distinct private CSI PVC, never a secret. mountPath is an absolute
+# canonical path exactly matching effective object_storage.staging_root. No automatic initialization;
+# ownership0700/runtime UID and initialize-object-stage confirmation are required before serving.
+storage:
+  object-staging: {existingClaim: projectone-object-stage, mountPath: /var/lib/projectone/object-staging}
+# Owner: protected configuration projector. Filename list; no literal credentials. Include every
+# existing profile file (add locale/AWS/Valkey files if enabled), plus these S3/management references.
+# Projector copies protected bytes into0700 root with0600 runtime-owned files. Restart required.
+secrets:
+  files: [database-dsn, auth-hmac, mail-keyring.json, certificate.pem, private-key.pem, license-trust.json, object-storage.env, s3-access-key, s3-secret-key, s3-refusal-access-key, s3-refusal-secret-key, s3-ca.pem, management-ca.pem, management-client.pem, management-client-key.pem]

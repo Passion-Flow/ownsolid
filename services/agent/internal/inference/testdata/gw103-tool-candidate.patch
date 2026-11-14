@@ -1,0 +1,142 @@
+diff --git a/services/agent/internal/inference/container.go b/services/agent/internal/inference/container.go
+index 16cbf73b..0f51469f 100644
+--- a/services/agent/internal/inference/container.go
++++ b/services/agent/internal/inference/container.go
+@@ -76,7 +76,12 @@ var gpuID = regexp.MustCompile(`^GPU-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9
+ var protectedPath = regexp.MustCompile(`^/[A-Za-z0-9_/-]+$`)
+
+ func ContainerConfiguration(deployment, node, gpu, modelPath, cachePath, network string) (ContainerConfig, error) {
+-	return containerConfiguration(deployment, node, gpu, modelPath, cachePath, network, wire.ModelCatalogDigest(), "float16", "")
++	catalog := wire.ModelCatalogDigest()
++	config, err := containerConfiguration(deployment, node, gpu, modelPath, cachePath, network, catalog, "float16", "")
++	if err != nil {
++		return ContainerConfig{}, err
++	}
++	return gw103ToolCandidate(config, wire.ApprovedInferenceRecipe(), catalog)
+ }
+
+ func DerivedContainerConfiguration(c wire.InferenceCommand, node, modelPath, cachePath, network string) (ContainerConfig, error) {
+diff --git a/services/agent/internal/inference/gw103_tool_candidate.go b/services/agent/internal/inference/gw103_tool_candidate.go
+new file mode 100644
+index 00000000..d4ccff95
+--- /dev/null
++++ b/services/agent/internal/inference/gw103_tool_candidate.go
+@@ -0,0 +1,26 @@
++package inference
++
++import (
++	"crypto/sha256"
++	"encoding/hex"
++	"encoding/json"
++
++	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++)
++
++// gw103ToolCandidate exists only in the disposable qualification build.
++func gw103ToolCandidate(config ContainerConfig, recipe wire.InferenceRecipe, catalog string) (ContainerConfig, error) {
++	const catalogSHA256 = "4d32aa5cd4b2d86f12beff791f0428f0813c2d3479041080d13b0be6bc6842bc"
++	const recipeSHA256 = "48fa2638f2e3e8dca1359e77b34aa4f7a34b9f24ba0dee96602feb6fb1f08a31"
++	encoded, err := json.Marshal(recipe)
++	digest := sha256.Sum256(encoded)
++	if err != nil || catalog != catalogSHA256 || hex.EncodeToString(digest[:]) != recipeSHA256 {
++		return ContainerConfig{}, fail("INFERENCE_CONFIGURATION_INVALID")
++	}
++	config.Cmd = append(config.Cmd,
++		"--enable-auto-tool-choice", "--tool-call-parser", "hermes",
++		"--no-trust-remote-code", "--no-trust-request-chat-template",
++		"--default-chat-template-kwargs", `{"enable_thinking":false}`,
++	)
++	return config, nil
++}
+diff --git a/services/agent/internal/inference/gw103_tool_candidate_test.go b/services/agent/internal/inference/gw103_tool_candidate_test.go
+new file mode 100644
+index 00000000..8cc2b557
+--- /dev/null
++++ b/services/agent/internal/inference/gw103_tool_candidate_test.go
+@@ -0,0 +1,86 @@
++package inference
++
++import (
++	"reflect"
++	"slices"
++	"strings"
++	"testing"
++
++	wire "github.com/Passion-Flow/ownsolid/api/agent/v1"
++)
++
++func TestGW103CandidatePreservesContainerIsolation(t *testing.T) {
++	deployment := "00000000-0000-0000-0000-000000000001"
++	node := "00000000-0000-0000-0000-000000000002"
++	gpu := "GPU-00000000-0000-0000-0000-000000000003"
++	root := "/opt/projectone-inference-test/runtime"
++	catalog := wire.ModelCatalogDigest()
++	model := root + "/models/" + catalog
++	cache := root + "/deployments/" + deployment + "/cache"
++	network := strings.Repeat("a", 64)
++	baseline, err := containerConfiguration(deployment, node, gpu, model, cache, network, catalog, "float16", "")
++	if err != nil {
++		t.Fatal(err)
++	}
++	textArgv := []string{"/model", "--tokenizer", "/model", "--served-model-name", "projectone-qwen3-0.6b", "--host", "0.0.0.0", "--port", "8000", "--dtype", "float16", "--max-model-len", "2048", "--max-num-seqs", "4", "--gpu-memory-utilization", "0.75", "--enforce-eager"}
++	if !slices.Equal(baseline.Cmd, textArgv) {
++		t.Fatalf("text argv drifted: %q", baseline.Cmd)
++	}
++	candidate, err := ContainerConfiguration(deployment, node, gpu, model, cache, network)
++	if err != nil {
++		t.Fatal(err)
++	}
++	baseline.Cmd = append(textArgv,
++		"--enable-auto-tool-choice", "--tool-call-parser", "hermes", "--no-trust-remote-code", "--no-trust-request-chat-template",
++		"--default-chat-template-kwargs", `{"enable_thinking":false}`)
++	if !reflect.DeepEqual(candidate, baseline) {
++		t.Fatalf("candidate changed container configuration: got %+v, want %+v", candidate, baseline)
++	}
++	manager := Manager{config: Config{RootDirectory: root}}
++	owned, err := manager.commandContainerConfiguration(journal{
++		NodeID: node, NetworkID: network, Command: wire.InferenceCommand{DeploymentID: deployment, GPUUUID: gpu},
++	})
++	if err != nil || !reflect.DeepEqual(candidate, owned) {
++		t.Fatalf("ownership check did not reconstruct the candidate: %v", err)
++	}
++	derived := derivedCommandFixture(t)
++	derivedSpec, err := DerivedContainerConfiguration(derived, node, root+"/models/"+derived.CatalogDigest, root+"/deployments/"+derived.DeploymentID+"/cache", network)
++	if err != nil {
++		t.Fatal(err)
++	}
++	for _, flag := range []string{"--enable-auto-tool-choice", "--tool-call-parser", "--no-trust-request-chat-template"} {
++		if slices.Contains(derivedSpec.Cmd, flag) {
++			t.Fatalf("derived launch received candidate flag %q", flag)
++		}
++	}
++}
++
++func TestGW103CandidateRejectsUnqualifiedIdentity(t *testing.T) {
++	for _, tc := range []struct {
++		name         string
++		changeRecipe func(*wire.InferenceRecipe)
++		otherCatalog string
++	}{
++		{name: "different catalog", otherCatalog: strings.Repeat("c", 64)},
++		{name: "derived catalog", otherCatalog: derivedCommandFixture(t).CatalogDigest},
++		{name: "CPU image version", changeRecipe: func(r *wire.InferenceRecipe) { r.Version = "0.29.0" }},
++		{name: "different manifest", changeRecipe: func(r *wire.InferenceRecipe) { r.ImageManifestDigest = "sha256:" + strings.Repeat("a", 64) }},
++		{name: "different image config", changeRecipe: func(r *wire.InferenceRecipe) { r.ImageConfigDigest = "sha256:" + strings.Repeat("b", 64) }},
++		{name: "different launch recipe", changeRecipe: func(r *wire.InferenceRecipe) { r.MaximumContext++ }},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			recipe := wire.ApprovedInferenceRecipe()
++			catalog := wire.ModelCatalogDigest()
++			if tc.otherCatalog != "" {
++				catalog = tc.otherCatalog
++			}
++			if tc.changeRecipe != nil {
++				tc.changeRecipe(&recipe)
++			}
++			config, err := gw103ToolCandidate(ContainerConfig{Cmd: []string{"/model"}}, recipe, catalog)
++			if err == nil || err.Error() != "INFERENCE_CONFIGURATION_INVALID" || !reflect.DeepEqual(config, ContainerConfig{}) {
++				t.Fatalf("unqualified identity yielded a launch configuration: %+v, %v", config, err)
++			}
++		})
++	}
++}

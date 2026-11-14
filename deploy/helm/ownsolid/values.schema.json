@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "ownsolid site Helm values",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["registry", "images", "release", "control", "ingress", "smtp"],
+  "definitions": {
+    "resourceName": {
+      "type": "string",
+      "maxLength": 63,
+      "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+    },
+    "dnsName": {
+      "type": "string",
+      "maxLength": 253,
+      "pattern": "^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]([a-z0-9-]{0,61}[a-z0-9])?$"
+    },
+    "resources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cpu", "memory"],
+      "properties": {
+        "cpu": {"type": "string", "pattern": "^([1-9][0-9]{0,5}m|[1-9][0-9]{0,2})$"},
+        "memory": {"type": "string", "pattern": "^[1-9][0-9]{0,5}(Mi|Gi)$"}
+      }
+    }
+  },
+  "properties": {
+    "registry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["address", "pullSecret"],
+      "properties": {
+        "address": {
+          "type": "string",
+          "pattern": "^(10\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.|192\\.168\\.)[0-9.]+:[1-9][0-9]{3,4}$"
+        },
+        "pullSecret": {"$ref": "#/definitions/resourceName"}
+      }
+    },
+    "images": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["control"],
+      "properties": {
+        "control": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["manifestSHA256"],
+      "properties": {
+        "manifestSHA256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runtimeSecret", "modelClaim", "uid", "gid", "terminationGracePeriodSeconds", "resources"],
+      "properties": {
+        "runtimeSecret": {"$ref": "#/definitions/resourceName"},
+        "modelClaim": {"$ref": "#/definitions/resourceName"},
+        "uid": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+        "gid": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+        "terminationGracePeriodSeconds": {"type": "integer", "minimum": 30, "maximum": 600},
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["requests", "limits"],
+          "properties": {
+            "requests": {"$ref": "#/definitions/resources"},
+            "limits": {"$ref": "#/definitions/resources"}
+          }
+        }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["className", "entryPoint", "adminHost", "portalHost", "tlsSecret"],
+      "properties": {
+        "className": {"$ref": "#/definitions/resourceName"},
+        "entryPoint": {"$ref": "#/definitions/resourceName"},
+        "adminHost": {"$ref": "#/definitions/dnsName"},
+        "portalHost": {"$ref": "#/definitions/dnsName"},
+        "tlsSecret": {"$ref": "#/definitions/resourceName"}
+      }
+    },
+    "smtp": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "port", "fromAddress", "tlsMode", "username"],
+      "properties": {
+        "host": {"type": "string", "minLength": 1, "maxLength": 253, "pattern": "^[a-z0-9][a-z0-9.:-]*$"},
+        "port": {"type": "integer", "minimum": 1, "maximum": 65535},
+        "fromAddress": {"type": "string", "maxLength": 254, "pattern": "^[^ @]+@[^ @]+$"},
+        "tlsMode": {"enum": ["starttls_required", "implicit_tls"]},
+        "username": {"type": "string", "maxLength": 256, "pattern": "^[^\\r\\n]*$"}
+      }
+    }
+  }
+}

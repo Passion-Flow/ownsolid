@@ -1,0 +1,212 @@
+package apps
+
+import (
+	"bytes"
+	"errors"
+	"path/filepath"
+	"slices"
+	"strings"
+	"testing"
+	"time"
+)
+
+func TestVerifyComposeImagePlan(t *testing.T) {
+	image := newImageFixture(t, "amd64", false)
+	fixture := signOCI(t, ociTar(t, image.files, ""), image.image)
+	verified, err := VerifyInstallBundle(t.Context(), fixture.root, fixture.key, fixture.limit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name  string
+		field string
+		value any
+	}{
+		{name: "signed"},
+		{name: "unsigned image", field: "image", value: "sha256:" + strings.Repeat("1", 64)},
+		{name: "registry reference", field: "image", value: "example.invalid/app@" + image.image},
+		{name: "mutable tag", field: "image", value: "example.invalid/app:current"},
+		{name: "missing pull policy", field: "pull_policy", value: ""},
+		{name: "pull always", field: "pull_policy", value: "always"},
+		{name: "build", field: "build", value: map[string]string{"context": "."}},
+		{name: "provider", field: "provider", value: map[string]string{"type": "external"}},
+		{name: "init image", field: "pre_start", value: []map[string]string{{"image": "example.invalid/init:current"}}},
+		{name: "models", field: "models", value: []string{"external"}},
+		{name: "develop", field: "develop", value: map[string]any{}},
+		{name: "extends", field: "extends", value: map[string]string{"file": "other.yaml"}},
+		{name: "image mount", field: "volumes", value: []map[string]string{{"type": "image", "source": image.image}}},
+		{name: "foreign platform", field: "platform", value: "linux/arm64"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			api := map[string]any{
+				"image": image.image, "pull_policy": "never", "platform": "linux/amd64",
+				"volumes": []map[string]string{{"type": "volume", "source": "data", "target": "/data"}},
+			}
+			if tc.field != "" {
+				api[tc.field] = tc.value
+			}
+			raw := ociJSON(t, map[string]any{
+				"services": map[string]any{
+					"worker": map[string]any{"image": image.image, "pull_policy": "never", "profiles": []string{"batch"}},
+					"api":    api,
+				},
+			})
+			plan, err := verified.VerifyComposeImagePlan(RenderedCompose{ArtifactSHA256: verified.Manifest.Artifact.SHA256, JSON: raw})
+			if tc.field != "" {
+				if !errors.Is(err, ErrComposeImagePlan) || len(plan.Services) != 0 {
+					t.Fatalf("unsafe model returned an image plan: %v", err)
+				}
+				return
+			}
+			want := []ComposeServiceImage{{Service: "api", ManifestDigest: image.image}, {Service: "worker", ManifestDigest: image.image}}
+			if err != nil || plan.Pin != verified.Pin || plan.ArtifactSHA256 != verified.Manifest.Artifact.SHA256 ||
+				plan.ModelSHA256 != digestBytes(raw) || !slices.Equal(plan.Services, want) {
+				t.Fatalf("unexpected signed image plan %+v, %v", plan, err)
+			}
+		})
+	}
+	services := `{"api":{"image":"` + image.image + `","pull_policy":"never"}}`
+	for _, raw := range []string{
+		`{"services":` + services + `,"services":` + services + `}`,
+		`{"services":` + services + `,"include":["other.yaml"]}`,
+		`{"services":` + services + `,"models":{"external":{"model":"other"}}}`,
+		`{"services":{}}`,
+		strings.Repeat(" ", maxComposeModelBytes+1),
+	} {
+		if _, err := verified.VerifyComposeImagePlan(RenderedCompose{ArtifactSHA256: verified.Manifest.Artifact.SHA256, JSON: []byte(raw)}); !errors.Is(err, ErrComposeImagePlan) {
+			t.Fatalf("invalid model was accepted: %v", err)
+		}
+	}
+}
+
+func TestImportRefusesChangesToAdmittedComposePlan(t *testing.T) {
+	image := newImageFixture(t, "amd64", false)
+	fixture := signOCI(t, ociTar(t, image.files, ""), image.image)
+	verified, err := VerifyInstallBundle(t.Context(), fixture.root, fixture.key, fixture.limit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	model := RenderedCompose{
+		ArtifactSHA256: verified.Manifest.Artifact.SHA256,
+		JSON:           []byte(`{"services":{"api":{"image":"` + image.image + `","pull_policy":"never","command":["serve"]}}}`),
+	}
+	plan, err := verified.VerifyComposeImagePlan(model)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := plan.VerifyRendered(model); err != nil {
+		t.Fatal(err)
+	}
+
+	replaced := model
+	replaced.JSON = bytes.Replace(model.JSON, []byte(`"serve"`), []byte(`"debug"`), 1)
+	alternate, err := verified.VerifyComposeImagePlan(replaced)
+	if err != nil || !slices.Equal(alternate.Services, plan.Services) || alternate.ModelSHA256 == plan.ModelSHA256 {
+		t.Fatalf("replacement fixture must retain the signed images and change the model: %v", err)
+	}
+	padded := model
+	padded.JSON = append(slices.Clone(model.JSON), '\n')
+	otherSource := model
+	otherSource.ArtifactSHA256 = digestBytes([]byte("another source"))
+	for _, candidate := range []RenderedCompose{replaced, padded, otherSource} {
+		if err := plan.VerifyRendered(candidate); !errors.Is(err, ErrComposeImagePlan) {
+			t.Fatalf("launch verification accepted a replacement: %v", err)
+		}
+	}
+
+	wrongPin, wrongSource, wrongBinding := plan, plan, plan
+	wrongPin.Pin.BundleSHA256 = digestBytes([]byte("another bundle"))
+	wrongSource.ArtifactSHA256 = otherSource.ArtifactSHA256
+	wrongBinding.Services = []ComposeServiceImage{{Service: "worker", ManifestDigest: image.image}}
+	for _, tc := range []struct {
+		name     string
+		rendered *RenderedCompose
+		plan     ComposeImagePlan
+	}{
+		{"changed command", &replaced, plan},
+		{"changed bytes", &padded, plan},
+		{"changed source", &otherSource, plan},
+		{"missing model", nil, plan},
+		{"wrong bundle", &model, wrongPin},
+		{"wrong source in plan", &model, wrongSource},
+		{"wrong service binding", &model, wrongBinding},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := ImportInstallImage(t.Context(), fixture.root.Name(), fixture.key, ImageImportOptions{
+				MaximumPayloadBytes: fixture.limit, MaximumExpandedBytes: testTransitionBudget, Timeout: time.Second,
+				ExpectedPin: &plan.Pin, RenderedCompose: tc.rendered, ExpectedComposePlan: &tc.plan,
+			})
+			if !errors.Is(err, ErrComposeImagePlan) || result.Pin != (ReleasePin{}) {
+				t.Fatalf("import did not reject the change before Docker access: %v", err)
+			}
+		})
+	}
+}
+
+func TestComposePlanRefusesUnresolvedServiceInputs(t *testing.T) {
+	image := newImageFixture(t, "amd64", false)
+	fixture := signOCI(t, ociTar(t, image.files, ""), image.image)
+	verified, err := VerifyInstallBundle(t.Context(), fixture.root, fixture.key, fixture.limit)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name  string
+		field string
+		value any
+	}{
+		{"env file", "env_file", "fixture.env"},
+		{"optional env file", "env_file", []map[string]any{{"path": "fixture.env", "required": false}}},
+		{"raw env file", "env_file", []map[string]string{{"path": "fixture.env", "format": "raw"}}},
+		{"label file", "label_file", []string{"fixture.labels"}},
+		{"inherited env", "environment", map[string]any{"CATALOG_MODE": nil}},
+		{"unnormalized env", "environment", []string{"CATALOG_MODE"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rendered := RenderedCompose{
+				ArtifactSHA256: verified.Manifest.Artifact.SHA256,
+				JSON: ociJSON(t, map[string]any{"services": map[string]any{
+					"fixture": map[string]any{"image": image.image, "pull_policy": "never", tc.field: tc.value},
+				}}),
+			}
+			if _, err := verified.VerifyComposeImagePlan(rendered); !errors.Is(err, ErrComposeImagePlan) {
+				t.Fatalf("admission accepted an unresolved service input: %v", err)
+			}
+			// An earlier verifier admitted these same bytes.
+			retained := ComposeImagePlan{
+				Pin: verified.Pin, ArtifactSHA256: rendered.ArtifactSHA256, ModelSHA256: digestBytes(rendered.JSON),
+				Services: []ComposeServiceImage{{Service: "fixture", ManifestDigest: image.image}},
+			}
+			if err := retained.VerifyRendered(rendered); !errors.Is(err, ErrComposeImagePlan) {
+				t.Fatalf("launch verification accepted a retained unresolved service input: %v", err)
+			}
+			options := ImageImportOptions{
+				MaximumPayloadBytes: fixture.limit, MaximumExpandedBytes: testTransitionBudget, Timeout: time.Second,
+				ExpectedPin: &verified.Pin, RenderedCompose: &rendered, ExpectedComposePlan: &retained,
+			}
+			if result, err := ImportInstallImage(t.Context(), fixture.root.Name(), fixture.key, options); !errors.Is(err, ErrComposeImagePlan) || result.Pin != (ReleasePin{}) {
+				t.Fatalf("import did not reject an unresolved service input before Docker access: %v", err)
+			}
+		})
+	}
+}
+
+func TestImportRefusesRenderedComposeFromAnotherArtifact(t *testing.T) {
+	root, key, private := transitionCatalog(t)
+	pin := writeTransitionRelease(t, root, private, catalogReleaseFixture{version: "1.0.0", engine: "compose"})
+	artifact, err := root.ReadFile(pin.Version + "/compose.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, source := range []string{"sha256:" + strings.Repeat("1", 64), digestBytes(artifact)} {
+		result, err := ImportInstallImage(t.Context(), filepath.Join(root.Name(), pin.Version), key, ImageImportOptions{
+			MaximumPayloadBytes: testTransitionBudget, MaximumExpandedBytes: testTransitionBudget, Timeout: time.Second,
+			ExpectedPin: &pin, RenderedCompose: &RenderedCompose{
+				ArtifactSHA256: source, JSON: []byte(`{"services":{"api":{"image":"example.invalid/unsigned:current","pull_policy":"never"}}}`),
+			},
+		})
+		if !errors.Is(err, ErrComposeImagePlan) || result.Pin != (ReleasePin{}) {
+			t.Fatalf("import passed the rendered image gate: %v", err)
+		}
+	}
+}

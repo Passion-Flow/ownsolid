@@ -1,0 +1,287 @@
+{
+  "format_version": 1,
+  "kind": "projectone-native-postgres-clients-v1",
+  "client_distribution": "pgdg-bookworm-18.6-1.pgdg12+2",
+  "semantic_version": "18.6",
+  "native_version": "18.6 (Debian 18.6-1.pgdg12+2)",
+  "architectures": {
+    "amd64": {
+      "elf_machine": 62,
+      "packages": [
+        {
+          "name": "postgresql-client-18",
+          "version": "18.6-1.pgdg12+2",
+          "filename": "postgresql-client-18_18.6-1.pgdg12+2_amd64.deb",
+          "size": 2134056,
+          "sha256": "6105a64b8166ae06c2b6c681d7e600458c598151c08b0f10bf5fa25ac711d6b9",
+          "url": "https://download.postgresql.org/pub/repos/apt/pool/main/p/postgresql-18/postgresql-client-18_18.6-1.pgdg12+2_amd64.deb",
+          "provenance": {
+            "inrelease_url": "https://apt.postgresql.org/pub/repos/apt/dists/bookworm-pgdg/InRelease",
+            "inrelease_sha256": "74c7a601b8eb0088cc6080e60318cf5a355e8e54294f5cd525f40a9f94e1c500",
+            "primary_fingerprint": "B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8",
+            "index_url": "https://apt.postgresql.org/pub/repos/apt/dists/bookworm-pgdg/main/binary-amd64/Packages.gz",
+            "index_sha256": "b691e21ed79c6eb94712ae4a6dc8583f5d9f8ca383705d60a91dc63d18dd4452"
+          },
+          "files": [
+            {
+              "member": "usr/lib/postgresql/18/bin/pg_dump",
+              "target": "postgres-native/bin/pg_dump",
+              "size": 496464,
+              "sha256": "2eedc3c96b877815c369725aeea561c27c8e56ac9de1a96c345d2c0ae30b7695",
+              "elf_machine": 62
+            },
+            {
+              "member": "usr/lib/postgresql/18/bin/pg_restore",
+              "target": "postgres-native/bin/pg_restore",
+              "size": 253968,
+              "sha256": "eba5f8a8361918f873e273b1107dd727c19fc4269e8f98854ed5589555d668c6",
+              "elf_machine": 62
+            },
+            {
+              "member": "usr/share/doc/postgresql-client-18/copyright",
+              "target": "third-party/postgres-native/postgresql-client-18/copyright",
+              "size": 12934,
+              "sha256": "afcc052a946b4117667527211b4ca303f07044f5585222f4c8f577e0764b2123"
+            }
+          ]
+        },
+        {
+          "name": "libpq5",
+          "version": "18.6-1.pgdg12+2",
+          "filename": "libpq5_18.6-1.pgdg12+2_amd64.deb",
+          "size": 265280,
+          "sha256": "9dc15f3f41090e632e0449693323f18c96bfd25794c439d8bcde06af6c5012f6",
+          "url": "https://download.postgresql.org/pub/repos/apt/pool/main/p/postgresql-18/libpq5_18.6-1.pgdg12+2_amd64.deb",
+          "provenance": {
+            "inrelease_url": "https://apt.postgresql.org/pub/repos/apt/dists/bookworm-pgdg/InRelease",
+            "inrelease_sha256": "74c7a601b8eb0088cc6080e60318cf5a355e8e54294f5cd525f40a9f94e1c500",
+            "primary_fingerprint": "B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8",
+            "index_url": "https://apt.postgresql.org/pub/repos/apt/dists/bookworm-pgdg/main/binary-amd64/Packages.gz",
+            "index_sha256": "b691e21ed79c6eb94712ae4a6dc8583f5d9f8ca383705d60a91dc63d18dd4452"
+          },
+          "files": [
+            {
+              "member": "usr/lib/x86_64-linux-gnu/libpq.so.5.18",
+              "target": "postgres-native/lib/libpq.so.5",
+              "size": 391584,
+              "sha256": "9d4cc38691c249a7a32017a03bfafeee93b3a67759df8a7e55c09470085302b1",
+              "elf_machine": 62
+            },
+            {
+              "member": "usr/share/doc/libpq5/copyright",
+              "target": "third-party/postgres-native/libpq5/copyright",
+              "size": 12934,
+              "sha256": "afcc052a946b4117667527211b4ca303f07044f5585222f4c8f577e0764b2123"
+            }
+          ]
+        },
+        {
+          "name": "libldap-2.5-0",
+          "version": "2.5.13+dfsg-5",
+          "filename": "libldap-2.5-0_2.5.13+dfsg-5_amd64.deb",
+          "size": 183248,
+          "sha256": "4b6c30f6554149c594628d945edc6003f0eea8d0cc1341638c0e71375db147ed",
+          "url": "https://deb.debian.org/debian/pool/main/o/openldap/libldap-2.5-0_2.5.13+dfsg-5_amd64.deb",
+          "provenance": {
+            "inrelease_url": "https://deb.debian.org/debian/dists/bookworm/InRelease",
+            "inrelease_sha256": "77737fa4b34f2693e982cc9ee35736816c35a7778fc2d326cc1bbf5b301fe1aa",
+            "primary_fingerprint": "B8B80B5B623EAB6AD8775C45B7C5D7D6350947F8",
+            "index_url": "https://deb.debian.org/debian/dists/bookworm/main/binary-amd64/Packages.xz",
+            "index_sha256": "9e0b5aabb2465b3d2e7a7fe27f9913846277833f7a2826e7767acccff5b588c5"
+          },
+          "files": [
+            {
+              "member": "usr/lib/x86_64-linux-gnu/liblber-2.5.so.0.1.8",
+              "target": "postgres-native/lib/liblber-2.5.so.0",
+              "size": 63832,
+              "sha256": "64f183c14330855843841747ff1975ed87e767de2e2f1b1cc4d7abd2302cb7a9",
+              "elf_machine": 62
+            },
+            {
+              "member": "usr/lib/x86_64-linux-gnu/libldap-2.5.so.0.1.8",
+              "target": "postgres-native/lib/libldap-2.5.so.0",
+              "size": 380432,
+              "sha256": "062bb940f27b45cdcac5d3d66a727f441755b17f59842641ceaebaf990e1634d",
+              "elf_machine": 62
+            },
+            {
+              "member": "usr/share/doc/libldap-2.5-0/copyright",
+              "target": "third-party/postgres-native/libldap-2.5-0/copyright",
+              "size": 62837,
+              "sha256": "b4081907f0d9a4110736fa6540dc8ca9d7d60a20878b5d78f84916cc04907bdc"
+            }
+          ]
+        },
+        {
+          "name": "libsasl2-2",
+          "version": "2.1.28+dfsg-10+deb12u1",
+          "filename": "libsasl2-2_2.1.28+dfsg-10+deb12u1_amd64.deb",
+          "size": 59908,
+          "sha256": "d6f20408e2be92ebd9f5e3b1c1935b075efb3f03abb5f48f7b991a0ad3e2d6a5",
+          "url": "https://deb.debian.org/debian-security/pool/updates/main/c/cyrus-sasl2/libsasl2-2_2.1.28+dfsg-10+deb12u1_amd64.deb",
+          "provenance": {
+            "inrelease_url": "https://deb.debian.org/debian-security/dists/bookworm-security/InRelease",
+            "inrelease_sha256": "a6e07d793eab50af0fcef4a26aca8063e88a602f3c85727fc412ebc4fe128397",
+            "primary_fingerprint": "05AB90340C0C5E797F44A8C8254CF3B5AEC0A8F0",
+            "index_url": "https://deb.debian.org/debian-security/dists/bookworm-security/main/binary-amd64/Packages.xz",
+            "index_sha256": "08a63b9145da1f85b8de3daa193a8bfdbb18354acb21e1bd7ca93c889bbea5d0"
+          },
+          "files": [
+            {
+              "member": "usr/lib/x86_64-linux-gnu/libsasl2.so.2.0.25",
+              "target": "postgres-native/lib/libsasl2.so.2",
+              "size": 113392,
+              "sha256": "9fac7590786af72cfa96d85dc42aa389baa4f2dbc0a3ef01588bdf6d57c8bb85",
+              "elf_machine": 62
+            },
+            {
+              "member": "usr/share/doc/libsasl2-2/copyright",
+              "target": "third-party/postgres-native/libsasl2-2/copyright",
+              "size": 32354,
+              "sha256": "5e77ddcac7fb682d696bc4b034dc2869e5a9011e8c2ed3c570ab8db0f4506931"
+            }
+          ]
+        }
+      ]
+    },
+    "arm64": {
+      "elf_machine": 183,
+      "packages": [
+        {
+          "name": "postgresql-client-18",
+          "version": "18.6-1.pgdg12+2",
+          "filename": "postgresql-client-18_18.6-1.pgdg12+2_arm64.deb",
+          "size": 2079192,
+          "sha256": "56f1be46b6ba10056c2beda0404554b65171e21b13f5cc5044182d4eae53ce58",
+          "url": "https://download.postgresql.org/pub/repos/apt/pool/main/p/postgresql-18/postgresql-client-18_18.6-1.pgdg12+2_arm64.deb",
+          "provenance": {
+            "inrelease_url": "https://apt.postgresql.org/pub/repos/apt/dists/bookworm-pgdg/InRelease",
+            "inrelease_sha256": "74c7a601b8eb0088cc6080e60318cf5a355e8e54294f5cd525f40a9f94e1c500",
+            "primary_fingerprint": "B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8",
+            "index_url": "https://apt.postgresql.org/pub/repos/apt/dists/bookworm-pgdg/main/binary-arm64/Packages.gz",
+            "index_sha256": "5eeb5072b84ee06aa745a59f473d2d80959752a3c3e435ba4a799b75f81d6bb0"
+          },
+          "files": [
+            {
+              "member": "usr/lib/postgresql/18/bin/pg_dump",
+              "target": "postgres-native/bin/pg_dump",
+              "size": 529064,
+              "sha256": "80390fa59e44b05c5a908a91a7d77917c4f554493014c9f66c81f404e7fcde4d",
+              "elf_machine": 183
+            },
+            {
+              "member": "usr/lib/postgresql/18/bin/pg_restore",
+              "target": "postgres-native/bin/pg_restore",
+              "size": 266088,
+              "sha256": "185421a43cc7c412d5b94c5c4b995fc4c16f7fee771a919ada0d6afe907c4677",
+              "elf_machine": 183
+            },
+            {
+              "member": "usr/share/doc/postgresql-client-18/copyright",
+              "target": "third-party/postgres-native/postgresql-client-18/copyright",
+              "size": 12934,
+              "sha256": "afcc052a946b4117667527211b4ca303f07044f5585222f4c8f577e0764b2123"
+            }
+          ]
+        },
+        {
+          "name": "libpq5",
+          "version": "18.6-1.pgdg12+2",
+          "filename": "libpq5_18.6-1.pgdg12+2_arm64.deb",
+          "size": 255944,
+          "sha256": "1e2b364b93ff16293d6f4a409e49b0d8c0521b9f7ae3423007f443c31c0f6766",
+          "url": "https://download.postgresql.org/pub/repos/apt/pool/main/p/postgresql-18/libpq5_18.6-1.pgdg12+2_arm64.deb",
+          "provenance": {
+            "inrelease_url": "https://apt.postgresql.org/pub/repos/apt/dists/bookworm-pgdg/InRelease",
+            "inrelease_sha256": "74c7a601b8eb0088cc6080e60318cf5a355e8e54294f5cd525f40a9f94e1c500",
+            "primary_fingerprint": "B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8",
+            "index_url": "https://apt.postgresql.org/pub/repos/apt/dists/bookworm-pgdg/main/binary-arm64/Packages.gz",
+            "index_sha256": "5eeb5072b84ee06aa745a59f473d2d80959752a3c3e435ba4a799b75f81d6bb0"
+          },
+          "files": [
+            {
+              "member": "usr/lib/aarch64-linux-gnu/libpq.so.5.18",
+              "target": "postgres-native/lib/libpq.so.5",
+              "size": 395632,
+              "sha256": "c09b0b30e7fb3adeada5e43032b1271bb791db2aee2b0db166cc124f47366d1a",
+              "elf_machine": 183
+            },
+            {
+              "member": "usr/share/doc/libpq5/copyright",
+              "target": "third-party/postgres-native/libpq5/copyright",
+              "size": 12934,
+              "sha256": "afcc052a946b4117667527211b4ca303f07044f5585222f4c8f577e0764b2123"
+            }
+          ]
+        },
+        {
+          "name": "libldap-2.5-0",
+          "version": "2.5.13+dfsg-5",
+          "filename": "libldap-2.5-0_2.5.13+dfsg-5_arm64.deb",
+          "size": 170832,
+          "sha256": "71e6ae4291a20db999c62cd0a4f30a92a799c46b99205d5e787d4acd7c343b91",
+          "url": "https://deb.debian.org/debian/pool/main/o/openldap/libldap-2.5-0_2.5.13+dfsg-5_arm64.deb",
+          "provenance": {
+            "inrelease_url": "https://deb.debian.org/debian/dists/bookworm/InRelease",
+            "inrelease_sha256": "77737fa4b34f2693e982cc9ee35736816c35a7778fc2d326cc1bbf5b301fe1aa",
+            "primary_fingerprint": "B8B80B5B623EAB6AD8775C45B7C5D7D6350947F8",
+            "index_url": "https://deb.debian.org/debian/dists/bookworm/main/binary-arm64/Packages.xz",
+            "index_sha256": "2ddb1737692e8c45c53e8d57c0ce4cd21c78c5703b830c3226b1423566a06c00"
+          },
+          "files": [
+            {
+              "member": "usr/lib/aarch64-linux-gnu/liblber-2.5.so.0.1.8",
+              "target": "postgres-native/lib/liblber-2.5.so.0",
+              "size": 67792,
+              "sha256": "1499b5a474ddabafec631d3858ca490673e294128a5ffad82a616152dba2b874",
+              "elf_machine": 183
+            },
+            {
+              "member": "usr/lib/aarch64-linux-gnu/libldap-2.5.so.0.1.8",
+              "target": "postgres-native/lib/libldap-2.5.so.0",
+              "size": 396656,
+              "sha256": "0267ce2e71ec1434d164cbcc422c529a4bf4e1a6590a54f4829e555eecabd2ed",
+              "elf_machine": 183
+            },
+            {
+              "member": "usr/share/doc/libldap-2.5-0/copyright",
+              "target": "third-party/postgres-native/libldap-2.5-0/copyright",
+              "size": 62837,
+              "sha256": "b4081907f0d9a4110736fa6540dc8ca9d7d60a20878b5d78f84916cc04907bdc"
+            }
+          ]
+        },
+        {
+          "name": "libsasl2-2",
+          "version": "2.1.28+dfsg-10+deb12u1",
+          "filename": "libsasl2-2_2.1.28+dfsg-10+deb12u1_arm64.deb",
+          "size": 58272,
+          "sha256": "b3686e0815d99e5ca6ce9234e486ca0ecd373d491e34457c3b9cba5c6dbba287",
+          "url": "https://deb.debian.org/debian-security/pool/updates/main/c/cyrus-sasl2/libsasl2-2_2.1.28+dfsg-10+deb12u1_arm64.deb",
+          "provenance": {
+            "inrelease_url": "https://deb.debian.org/debian-security/dists/bookworm-security/InRelease",
+            "inrelease_sha256": "a6e07d793eab50af0fcef4a26aca8063e88a602f3c85727fc412ebc4fe128397",
+            "primary_fingerprint": "05AB90340C0C5E797F44A8C8254CF3B5AEC0A8F0",
+            "index_url": "https://deb.debian.org/debian-security/dists/bookworm-security/main/binary-arm64/Packages.xz",
+            "index_sha256": "307627d3ef413d49e68b0afd18fe0d0d73158e3652a9455cc8c1ac8d3ce329c5"
+          },
+          "files": [
+            {
+              "member": "usr/lib/aarch64-linux-gnu/libsasl2.so.2.0.25",
+              "target": "postgres-native/lib/libsasl2.so.2",
+              "size": 133880,
+              "sha256": "28410abf5e6862ae0e0281c2299bc60aab91821aadf61b1919030ee940bae776",
+              "elf_machine": 183
+            },
+            {
+              "member": "usr/share/doc/libsasl2-2/copyright",
+              "target": "third-party/postgres-native/libsasl2-2/copyright",
+              "size": 32354,
+              "sha256": "5e77ddcac7fb682d696bc4b034dc2869e5a9011e8c2ed3c570ab8db0f4506931"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

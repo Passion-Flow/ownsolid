@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/config/task-events/schema-1",
+  "title": "Optional private task-event component configuration",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "const": false
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "driver",
+        "endpoint",
+        "dial_addresses",
+        "ca_file",
+        "client_certificate_file",
+        "client_key_file",
+        "publisher_seed_file",
+        "consumer_seed_file",
+        "namespace_id",
+        "stream",
+        "consumer",
+        "connect_seconds",
+        "request_seconds",
+        "pull_seconds",
+        "ack_wait_seconds",
+        "worker_poll_seconds",
+        "retry_seconds",
+        "reconnect_seconds",
+        "maximum_reconnect_attempts",
+        "maximum_publish_attempts",
+        "maximum_deliveries",
+        "maximum_ack_pending",
+        "stream_maximum_messages",
+        "stream_maximum_bytes",
+        "stream_retention_seconds",
+        "duplicate_window_seconds",
+        "retry_lifetime_seconds",
+        "history_retention_seconds",
+        "cleanup_batch",
+        "shutdown_seconds"
+      ],
+      "properties": {
+        "enabled": {
+          "const": true
+        },
+        "driver": {
+          "description": "Select the one initial transport. string; only nats_jetstream. Explicit enabled value; restart and exact broker admission required.",
+          "type": "string",
+          "minLength": 1,
+          "const": "nats_jetstream"
+        },
+        "endpoint": {
+          "description": "Select the exact private broker TLS authority. string; tls:// DNS/localhost/private-IP with explicit canonical port 1..65535; no URL credentials/path/query. Explicit enabled value; restart and exact broker admission required.",
+          "type": "string",
+          "minLength": 1
+        },
+        "dial_addresses": {
+          "description": "Pin allowed private broker network destinations. compact JSON array of 1..8 unique canonical RFC1918/ULA/loopback IP strings; literal endpoint IP must be included. Explicit enabled value; restart and exact broker admission required.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "ca_file": {
+          "description": "Reference the private broker trust anchors. absolute canonical protected CA file path; distinct from every other reference. Explicit enabled value; restart and exact broker admission required.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^/[^\\u0000-\\u001f]+$"
+        },
+        "client_certificate_file": {
+          "description": "Reference the actual mTLS client certificate. absolute canonical protected certificate file path; distinct references. Explicit enabled value; restart and exact broker admission required.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^/[^\\u0000-\\u001f]+$"
+        },
+        "client_key_file": {
+          "description": "Reference the actual mTLS private key. absolute canonical protected secret-file path; never literal key material. Explicit enabled value; restart and exact broker admission required.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^/[^\\u0000-\\u001f]+$"
+        },
+        "publisher_seed_file": {
+          "description": "Reference the restricted publisher NKey identity. absolute canonical protected secret-file path; private seed never enters env/log/browser. Explicit enabled value; restart and exact broker admission required.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^/[^\\u0000-\\u001f]+$"
+        },
+        "consumer_seed_file": {
+          "description": "Reference the separate restricted consumer NKey identity. absolute canonical protected secret-file path; distinct publisher identity. Explicit enabled value; restart and exact broker admission required.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^/[^\\u0000-\\u001f]+$"
+        },
+        "namespace_id": {
+          "description": "Bind subjects and provisioned broker metadata to this deployment. canonical nonzero lower-case UUID string; synthetic example must be replaced deliberately. Explicit enabled value; restart and exact broker admission required.",
+          "type": "string",
+          "minLength": 1,
+          "format": "uuid"
+        },
+        "stream": {
+          "description": "Bind the preprovisioned exact owned file stream. 1..64 ASCII characters matching [A-Za-z][A-Za-z0-9_-]*; no wildcard/dot; differs from consumer. Explicit enabled value; restart and exact broker admission required.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "consumer": {
+          "description": "Bind the preprovisioned durable pull consumer. 1..64 ASCII characters matching [A-Za-z][A-Za-z0-9_-]*; no wildcard/dot; differs from stream. Explicit enabled value; restart and exact broker admission required.",
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+        },
+        "connect_seconds": {
+          "description": "Bound each connection/TLS/auth attempt. integer seconds 1..60, no greater than request_seconds. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "request_seconds": {
+          "description": "Bound broker and task-event SQL operations. integer seconds 1..300; owning root transaction budgets also apply. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300
+        },
+        "pull_seconds": {
+          "description": "Bound one pull wait. integer seconds 1..request_seconds; each fetch requests one event. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300
+        },
+        "ack_wait_seconds": {
+          "description": "Allow confirmed SQL handling before broker redelivery. integer seconds 3*request_seconds+pull_seconds ..3600. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 4,
+          "maximum": 3600
+        },
+        "worker_poll_seconds": {
+          "description": "Bound idle publisher/maintenance polling cadence. integer seconds 1..60; cancellation interrupts waits. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "retry_seconds": {
+          "description": "Delay recoverable publication/NAK attempts. integer seconds 1..3600 and no greater than retry_lifetime_seconds. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600
+        },
+        "reconnect_seconds": {
+          "description": "Delay explicit bounded recovery of a disconnected connection. integer seconds 1..60; no hidden reconnect buffer replay. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "maximum_publish_attempts": {
+          "description": "Bound attempts within one immutable delivery generation. integer count 1..1000; actual unknown outcome retains readback requirement. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "maximum_deliveries": {
+          "description": "Bound application delivery failures before durable SQL DLQ. integer count 1..1000; native MaxDeliver=-1 remains fixed until receipt/DLQ can commit. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "maximum_ack_pending": {
+          "description": "Bound broker in-flight consumer deliveries. integer count 1..64; never native unlimited. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "stream_maximum_messages": {
+          "description": "Bound broker retained event count. integer count maximum_ack_pending ..100000000. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000000
+        },
+        "stream_maximum_bytes": {
+          "description": "Bound broker retained event bytes. integer bytes maximum_ack_pending*5120 ..1099511627776; actual storage admission is additionally required. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 5120,
+          "maximum": 1099511627776
+        },
+        "stream_retention_seconds": {
+          "description": "Bound broker message lifetime. integer seconds 60..31536000; expiry is explicit retained SQL DLQ reconciliation. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 31536000
+        },
+        "duplicate_window_seconds": {
+          "description": "Bound the broker duplicate-ID memory window. integer seconds 1..stream_retention_seconds; SQL inbox supplies longer idempotency proof. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31536000
+        },
+        "retry_lifetime_seconds": {
+          "description": "Bound one event transport replay window. integer seconds request_seconds ..stream_retention_seconds. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 31536000
+        },
+        "history_retention_seconds": {
+          "description": "Retain SQL receipts and history beyond message and retry lifetimes. integer seconds stream_retention_seconds+retry_lifetime_seconds+ack_wait_seconds ..94608000; unresolved effects remain retained. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 94608000
+        },
+        "cleanup_batch": {
+          "description": "Bound one exact SQL retention/expiry pass. integer rows 1..1000; no prefix purge or physical task mutation. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "shutdown_seconds": {
+          "description": "Bound joined cancellation and connection shutdown. integer seconds request_seconds+pull_seconds ..3600; timeout remains an incomplete stop. Explicit enabled value; restart and exact broker admission required.",
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 3600
+        },
+        "maximum_reconnect_attempts": {
+          "description": "Bound consecutive explicit broker reconstruction attempts before controlled service restart is required. Integer attempts 1..1000; persistent stream/consumer creation identity must remain unchanged. Required when enabled; protected environment overrides selected YAML; restart required.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        }
+      }
+    }
+  ],
+  "$comment": "Runtime validates canonical exact TLS/private IP/path policy, pairwise distinct references and all cross-field inequalities; schema alone is not broker or credential qualification."
+}

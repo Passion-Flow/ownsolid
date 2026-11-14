@@ -1,0 +1,59 @@
+# Merge these groups explicitly into a complete protected control.yaml; do not
+# pass this partial example as a standalone server configuration. Restart applies
+# the profile without rebuilding the same-target control image. Retain all actual
+# identity, database, SMTP, TLS, licensing and store references from that snapshot.
+# Three booleans are owned by Config; omitted defaults false, only true/false are
+# accepted. The protected --env-file maps them through their existing typed owners;
+# ambient environment has no authority. The explicit Compose
+# config-root/Helm ConfigMap selects the complete YAML; chart flags declare intent.
+workflows:
+  enabled: true
+plugins:
+  enabled: true
+  # Required when enabled: 1..32 reviewed, unique publisher public keys, each
+  # {key_id: SHA256-of-32-byte-key, public_key: canonical-padded-base64}.
+  # Copy the actual verified publisher inventory; no private signing key belongs
+  # here. Empty deliberately fails startup. No example key is trusted by default.
+  trusted_keys: []
+knowledge:
+  enabled: false
+# Runtime policies merge into the same typed boundary. Existing protected
+# PROJECT_ONE_HTTP_* mappings may override valid YAML via serve --env-file;
+# Compose interpolation and ambient environment cannot set application policy.
+runtime:
+  http:
+    request_seconds: 90
+    startup_seconds: 60
+    shutdown_seconds: 30
+  workflows:
+    graph_bytes: 32768
+    instructions_bytes: 2048
+    question_bytes: 2048
+    answer_bytes: 32768
+    run_seconds: 150
+    retrieval_seconds: 50
+    answer_seconds: 50
+    concurrency: 1
+    workspace_concurrency: 1
+    lease_seconds: 200
+    heartbeat_seconds: 4
+    commit_seconds: 10
+    maximum_workflows: 50
+    maximum_versions: 50
+    maximum_conversations: 50
+    maximum_runs: 500
+    maximum_turns: 500
+    retention_days: 14
+    maintenance_batch: 50
+    maintenance_seconds: 45
+  plugins:
+    capsule_bytes: 65536
+    manifest_bytes: 4096
+    result_bytes: 32768
+    maximum_models: 10
+    maximum_versions: 10
+    maximum_grants: 50
+    maximum_references: 200
+    commit_seconds: 10
+    maintenance_batch: 25
+    maintenance_seconds: 45

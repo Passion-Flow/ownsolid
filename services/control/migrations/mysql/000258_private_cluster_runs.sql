@@ -1,0 +1,1 @@
+ALTER TABLE private_cluster_runs ADD INDEX private_cluster_history(tenant_id,workspace_id,created_at DESC,id DESC);

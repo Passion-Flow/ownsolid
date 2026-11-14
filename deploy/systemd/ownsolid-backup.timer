@@ -1,0 +1,9 @@
+[Unit]
+Description=Schedule ownsolid verified backups
+
+[Timer]
+OnCalendar=daily
+Persistent=yes
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,6 @@
+{
+  "format_version": 1,
+  "defaults": {"memory_bytes": 67108864, "milli_cpu": 100, "pids": 16},
+  "minimum": {"memory_bytes": 16777216, "milli_cpu": 10, "pids": 4},
+  "maximum": {"memory_bytes": 268435456, "milli_cpu": 1000, "pids": 128}
+}

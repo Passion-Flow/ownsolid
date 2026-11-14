@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://projectone.invalid/configuration/control-machine-server/v1",
+  "title": "Independent control machine HTTPS server configuration",
+  "description": "Optional top-level machine_server group in control configuration. Omit the entire group for legacy shared HTTPS Admin routing. Presence requires all four fields; null is not omission. Structural canonical identity/collision checks and actual pinned TLS material validation belong to the Go configuration owner. No defaults or enable bypass are supplied.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["listen_address", "origin", "tls_certificate_file", "tls_private_key_file"],
+  "properties": {
+    "listen_address": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Explicit canonical host:port bind with numeric port1..65535 and bracketed IPv6. Different from the browser listener; actual socket alias conflicts are also refused before serving. No DNS/IP alias rewriting or default."
+    },
+    "origin": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^https://[^/?#@]+$",
+      "description": "Exact canonical HTTPS origin, distinct from both browser origins. DNS/localhost/IPv4/bracketed IPv6 and the selected nondefault port retain identity. Go rejects credentials, paths, explicit default443 and ambiguous host spellings."
+    },
+    "tls_certificate_file": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^/",
+      "description": "Canonical absolute certificate-chain reference, distinct from the private key. No certificate bytes in configuration; startup uses the shared pinned bounded1MiB pair reader, validity and exact machine-origin SAN verification."
+    },
+    "tls_private_key_file": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^/",
+      "description": "Canonical absolute protected private-key reference. No key material in configuration or environment. OS-readable private0400/0600 single-link regular input, pinned through the shared bounded TLS snapshot; no group/other permissions, symlink or verification bypass."
+    }
+  }
+}

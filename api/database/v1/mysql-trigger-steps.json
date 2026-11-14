@@ -1,0 +1,89 @@
+{
+  "format": "projectone.mysql.trigger-steps.v1",
+  "base_reference_sha256": "e7f70ebfe7f72bff01d234203d6276764101f8fa8f6b5e34311e1a364bed1392",
+  "predecessor_evolution_sha256": "add43be03bd2bb6e0a307cca8a7d9fb1e549f9248fdc8a27f4d53e6da25d5d91",
+  "after_step": 23,
+  "steps": [
+    {
+      "step": 24,
+      "file": "000024_sso_connector_identity.sql",
+      "object": "sso_connector_identity",
+      "kind": "create_trigger",
+      "table": "sso_connectors",
+      "event": "UPDATE",
+      "source_sha256": "d869e9ae04b6db6f70f62489043bba791f8f2bf84b2c7f30f36958e9397ac0f2"
+    },
+    {
+      "step": 25,
+      "file": "000025_sso_connector_retained.sql",
+      "object": "sso_connector_retained",
+      "kind": "create_trigger",
+      "table": "sso_connectors",
+      "event": "DELETE",
+      "source_sha256": "1e71c92ff42231d3ef119f7a5181295529c508408807376ec27054f729b41591"
+    },
+    {
+      "step": 26,
+      "file": "000026_sso_binding_identity.sql",
+      "object": "sso_binding_identity",
+      "kind": "create_trigger",
+      "table": "sso_bindings",
+      "event": "UPDATE",
+      "source_sha256": "58a371c5d91d7e1ffc37fc520d2a21ed8a0e7125c99a31a3f5bfc5b6bebd8a1f"
+    },
+    {
+      "step": 27,
+      "file": "000027_sso_binding_retained.sql",
+      "object": "sso_binding_retained",
+      "kind": "create_trigger",
+      "table": "sso_bindings",
+      "event": "DELETE",
+      "source_sha256": "002b716025e60db912303e5d32b64cf0cc91cec9d3fcae03eab68d200d04a75a"
+    },
+    {
+      "step": 28,
+      "file": "000028_sso_flow_begin.sql",
+      "object": "sso_flow_begin",
+      "kind": "create_trigger",
+      "table": "sso_flows",
+      "event": "INSERT",
+      "source_sha256": "d71459e2cd9ae06f5248ee6fa6cb4df213090aece63b4fc2b3965b3c5b8b8e82"
+    },
+    {
+      "step": 29,
+      "file": "000029_sso_flow_transition.sql",
+      "object": "sso_flow_transition",
+      "kind": "create_trigger",
+      "table": "sso_flows",
+      "event": "UPDATE",
+      "source_sha256": "154f643e9fd4c10ddc1ef5d2b8487c3786fc55278a3d04f015b113211f3f6aa9"
+    },
+    {
+      "step": 30,
+      "file": "000030_sessions_sso_issuance.sql",
+      "object": "sessions_sso_issuance",
+      "kind": "create_trigger",
+      "table": "sessions",
+      "event": "INSERT",
+      "source_sha256": "03a0d91b663e2fbecf107b208360414cc23cd4e2d77667fb34b73cb40f7d15a5"
+    },
+    {
+      "step": 31,
+      "file": "000031_sso_intent_update.sql",
+      "object": "sso_intent_update",
+      "kind": "create_trigger",
+      "table": "sso_mutation_intents",
+      "event": "UPDATE",
+      "source_sha256": "04e57eec99247a42ea7c24faccc054b88fd599cafbd22fbd488225ad4759f8b7"
+    },
+    {
+      "step": 32,
+      "file": "000032_sso_intent_delete.sql",
+      "object": "sso_intent_delete",
+      "kind": "create_trigger",
+      "table": "sso_mutation_intents",
+      "event": "DELETE",
+      "source_sha256": "855166ce8e2ea8725212b4a18457e4c2eafd4c69173ee3128b19e3e07aa299ee"
+    }
+  ]
+}

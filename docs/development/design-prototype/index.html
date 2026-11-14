@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-density="comfortable" data-accent="teal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ownsolid console prototype</title>
+<style>
+/* ---------- Bundled fonts (SIL OFL 1.1, see licenses/) ---------- */
+@font-face { font-family: "Figtree"; src: url("fonts/figtree-latin-wght-normal.woff2") format("woff2"); font-weight: 300 900; font-display: swap; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono-latin-wght-normal.woff2") format("woff2"); font-weight: 100 800; font-display: swap; }
+
+/* ---------- Design tokens ---------- */
+:root {
+  color-scheme: light;
+  --bg: #f6f4ef;
+  --surface: #fffefb;
+  --surface-2: #f1eee7;
+  --surface-3: #e7e3da;
+  --border: #e5e0d5;
+  --border-strong: #d3cdc0;
+  --text: #1d1b18;
+  --text-2: #59544b;
+  --text-3: #8c8679;
+  --deemph: #d8d2c5;
+  --good: #0ca30c;
+  --warning: #fab219;
+  --critical: #d03b3b;
+  --shadow-1: 0 1px 2px rgba(40, 32, 20, .05);
+  --shadow-2: 0 8px 28px rgba(40, 32, 20, .10), 0 1px 3px rgba(40, 32, 20, .06);
+  --shadow-3: 0 24px 64px rgba(40, 32, 20, .18), 0 2px 8px rgba(40, 32, 20, .08);
+  --log-bg: #1b1916;
+  --log-text: #ebe7df;
+  --font-brand: "Figtree";
+  --font-ui: var(--font-brand), -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --radius-s: 8px;
+  --radius-m: 12px;
+  --radius-l: 14px;
+  --row: 52px;
+  --gap: 20px;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+}
+:root[data-accent="teal"] { --accent: #0d9488; --accent-hover: #0b8378; --accent-soft: #e2f2ee; --accent-ink: #0a6f65; }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #161513;
+  --surface: #211f1c;
+  --surface-2: #2a2824;
+  --surface-3: #33302b;
+  --border: #36332e;
+  --border-strong: #46423b;
+  --text: #f3f0ea;
+  --text-2: #bdb7ac;
+  --text-3: #868074;
+  --deemph: #46423b;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, .35);
+  --shadow-2: 0 8px 28px rgba(0, 0, 0, .4), 0 1px 3px rgba(0, 0, 0, .3);
+  --shadow-3: 0 24px 64px rgba(0, 0, 0, .55), 0 2px 8px rgba(0, 0, 0, .4);
+  --log-bg: #100f0d;
+}
+:root[data-theme="dark"][data-accent="teal"] { --accent: #14a394; --accent-hover: #1ab3a3; --accent-soft: #15302b; --accent-ink: #74d3c6; }
+:root[data-density="compact"] { --row: 40px; --gap: 14px; }
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { font: 14px/1.5 var(--font-ui); color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+button, input, select { font: inherit; color: inherit; }
+a { color: inherit; text-decoration: none; }
+svg.icon { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.muted { color: var(--text-2); }
+.subtle { color: var(--text-3); }
+.num { font-variant-numeric: tabular-nums; }
+.link { color: var(--accent-ink); font-weight: 550; cursor: pointer; }
+.link:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+/* ---------- Shell ---------- */
+.shell { display: grid; grid-template-columns: 248px 1fr; height: 100vh; }
+.sidebar { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 18px 18px 10px; }
+.brand-mark { width: 28px; height: 28px; border-radius: 8px; background: var(--text); display: grid; place-items: center; }
+.brand-mark span { width: 11px; height: 11px; border-radius: 3px; background: var(--accent); transform: rotate(45deg); }
+.brand-name { font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+.nav { padding: 4px 10px 20px; }
+.nav-group { margin-top: 14px; }
+.nav-label { font-size: 11.5px; font-weight: 600; color: var(--text-3); padding: 0 10px 4px; }
+.nav-item { display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 10px; border-radius: var(--radius-s); color: var(--text-2); cursor: pointer; font-weight: 500; transition: background .15s var(--ease), color .15s var(--ease); }
+.nav-item:hover { background: var(--surface-2); color: var(--text); }
+.nav-item.active { background: var(--accent-soft); color: var(--accent-ink); font-weight: 600; }
+.nav-item .count { margin-left: auto; font-size: 11.5px; color: var(--text-3); }
+.nav-item.disabled { opacity: .5; cursor: default; }
+.nav-item.disabled:hover { background: none; color: var(--text-2); }
+.sidebar-foot { margin-top: auto; padding: 14px; border-top: 1px solid var(--border); }
+.airgap { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-m); background: var(--surface-2); }
+.airgap b { display: block; font-size: 12.5px; }
+.airgap small { color: var(--text-3); font-size: 11.5px; }
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px color-mix(in srgb, var(--good) 22%, transparent); flex: none; }
+
+.main { display: flex; flex-direction: column; min-width: 0; height: 100vh; }
+.topbar { height: 58px; flex: none; display: flex; align-items: center; gap: 10px; padding: 0 24px; border-bottom: 1px solid var(--border); background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: saturate(180%) blur(16px); position: sticky; top: 0; z-index: 5; }
+.crumbs { display: flex; align-items: center; gap: 6px; color: var(--text-3); font-size: 13px; }
+.crumbs svg { width: 14px; height: 14px; }
+.crumbs b { color: var(--text); font-weight: 600; }
+.search { margin-left: auto; display: flex; align-items: center; gap: 8px; width: 320px; height: 36px; padding: 0 10px 0 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-3); cursor: pointer; }
+.search span { flex: 1; font-size: 13px; }
+kbd { font: 11px var(--font-ui); border: 1px solid var(--border); border-bottom-width: 2px; border-radius: 5px; padding: 0 5px; color: var(--text-3); background: var(--surface-2); line-height: 17px; }
+.icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; cursor: pointer; color: var(--text-2); position: relative; }
+.icon-btn:hover { background: var(--surface-2); color: var(--text); }
+.icon-btn .dot { position: absolute; top: 8px; right: 9px; width: 7px; height: 7px; border-radius: 50%; background: var(--critical); border: 2px solid var(--bg); }
+.workspace { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; font-weight: 550; }
+.ws-dot { width: 18px; height: 18px; border-radius: 5px; background: linear-gradient(135deg, #2bb3a3, #0b6e64); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; font-weight: 650; font-size: 13px; flex: none; }
+.review { display: flex; align-items: center; gap: 6px; padding: 3px 4px 3px 10px; border-radius: 10px; border: 1px dashed var(--border-strong); font-size: 12px; color: var(--text-3); }
+.swatch { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--border-strong); cursor: pointer; padding: 0; }
+.swatch.on { box-shadow: 0 0 0 2px var(--text); }
+
+.content { flex: 1; overflow-y: auto; }
+.page { max-width: 1320px; margin: 0 auto; padding: 28px 28px 64px; animation: rise .3s var(--ease); }
+@keyframes rise { from { opacity: .4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.page-head { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 22px; }
+.page-head h1 { font-weight: 750; font-size: 27px; letter-spacing: -.03em; line-height: 1.2; margin: 0 0 4px; }
+.page-head p { margin: 0; color: var(--text-2); }
+.page-head .actions { margin-left: auto; display: flex; gap: 8px; flex: none; }
+
+/* ---------- Controls ---------- */
+.btn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border-strong); background: var(--surface); font-weight: 550; cursor: pointer; transition: background .15s, border-color .15s, transform .1s; white-space: nowrap; }
+.btn:hover { background: var(--surface-2); }
+.btn:active { transform: scale(.98); }
+.btn svg { width: 16px; height: 16px; }
+.btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.btn.primary:hover { background: var(--accent-hover); }
+.btn.ghost { border-color: transparent; background: none; color: var(--text-2); }
+.btn.ghost:hover { background: var(--surface-2); color: var(--text); }
+.btn.danger { color: var(--critical); }
+.btn.sm { height: 30px; padding: 0 10px; font-size: 13px; border-radius: 8px; }
+.btn kbd { margin-left: 4px; background: transparent; color: inherit; opacity: .7; border-color: currentColor; }
+.btn.primary kbd { border-color: rgba(255, 255, 255, .5); }
+.segmented { display: inline-flex; padding: 3px; gap: 2px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; }
+.segmented button { border: 0; background: none; height: 28px; padding: 0 12px; border-radius: 7px; cursor: pointer; color: var(--text-2); font-weight: 500; font-size: 13px; white-space: nowrap; }
+.segmented button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow-1); }
+.field { display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--surface); color: var(--text-3); width: 100%; }
+.field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.field input { border: 0; outline: 0; background: none; color: var(--text); width: 100%; }
+select.field { color: var(--text); }
+.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+.toolbar .grow { flex: 1; max-width: 320px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 550; color: var(--text); white-space: nowrap; }
+.pill i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); flex: none; }
+.pill.good i { background: var(--good); }
+.pill.warn i { background: var(--warning); }
+.pill.crit i { background: var(--critical); }
+.pill.live i { background: var(--accent); animation: blink 1.2s infinite; }
+@keyframes blink { 50% { opacity: .3; } }
+.tag { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 6px; background: var(--surface-2); font-size: 12px; color: var(--text-2); white-space: nowrap; }
+.tag.accent { background: var(--accent-soft); color: var(--accent-ink); }
+.copy { display: inline-flex; align-items: center; gap: 8px; }
+.copy button { border: 0; background: none; cursor: pointer; color: var(--text-3); padding: 4px; border-radius: 6px; display: grid; }
+.copy button:hover { background: var(--surface-2); color: var(--text); }
+.copy button svg { width: 15px; height: 15px; }
+input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; margin: 0; }
+
+/* ---------- Cards ---------- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-l); box-shadow: var(--shadow-1); }
+.card-head { display: flex; align-items: center; gap: 10px; padding: 16px 20px 2px; }
+.card-head h3 { margin: 0; font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+.card-head .sub { color: var(--text-3); font-size: 12.5px; }
+.card-head .right { margin-left: auto; }
+.card-body { padding: 12px 20px 18px; }
+.grid { display: grid; gap: var(--gap); }
+.g-4 { grid-template-columns: repeat(4, 1fr); }
+.g-5 { grid-template-columns: repeat(5, 1fr); }
+.g-2 { grid-template-columns: 1.55fr 1fr; }
+.g-2e { grid-template-columns: 1fr 1fr; }
+.stack { display: flex; flex-direction: column; gap: var(--gap); }
+.mb { margin-bottom: var(--gap); }
+
+.quick { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .15s; }
+.quick:hover { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.quick .qi { width: 36px; height: 36px; border-radius: 10px; background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; flex: none; }
+.quick b { display: block; font-size: 14px; }
+.quick small { color: var(--text-3); font-size: 12.5px; }
+.quick kbd { margin-left: auto; }
+
+.tile { padding: 16px 18px; }
+.tile .label { color: var(--text-2); font-size: 13px; font-weight: 500; }
+.tile .value { font-size: 28px; font-weight: 700; letter-spacing: -.03em; margin-top: 6px; line-height: 1.1; }
+.tile .value small { font-size: 14px; color: var(--text-3); font-weight: 500; margin-left: 3px; letter-spacing: 0; }
+.tile .foot { margin-top: 10px; font-size: 12.5px; color: var(--text-3); display: flex; align-items: center; gap: 8px; min-height: 20px; }
+.meter { height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; flex: 1; }
+.meter b { display: block; height: 100%; border-radius: 3px; background: var(--text-3); }
+.meter.accent b { background: var(--accent); }
+
+/* ---------- Tables ---------- */
+.table { width: 100%; border-collapse: separate; border-spacing: 0; }
+.table th { text-align: left; font-size: 12px; font-weight: 600; color: var(--text-3); padding: 0 14px; height: 40px; border-bottom: 1px solid var(--border); white-space: nowrap; background: var(--surface); }
+.table td { padding: 0 14px; height: var(--row); border-bottom: 1px solid var(--border); white-space: nowrap; }
+.table tr:last-child td { border-bottom: 0; }
+.table tbody tr { cursor: pointer; transition: background .12s; }
+.table tbody tr:hover td { background: var(--surface-2); }
+.table tbody tr.sel td { background: var(--accent-soft); }
+.table .w-check { width: 44px; padding-right: 0; }
+.row-actions { opacity: 0; transition: opacity .12s; display: flex; gap: 2px; justify-content: flex-end; }
+.table tbody tr:hover .row-actions { opacity: 1; }
+.cell-title { font-weight: 600; }
+.cell-sub { font-size: 12px; color: var(--text-3); }
+.bar-cell { display: flex; align-items: center; gap: 10px; min-width: 120px; }
+.bar-cell .num { width: 36px; text-align: right; font-size: 12.5px; color: var(--text-2); }
+.chips { display: flex; gap: 3px; }
+.chip-gpu { width: 9px; height: 18px; border-radius: 3px; background: var(--surface-3); }
+.chip-gpu.busy { background: var(--accent); }
+.chip-gpu.idle { background: var(--deemph); }
+.bulkbar { position: sticky; bottom: 20px; margin: 14px auto 0; width: max-content; display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 16px; border-radius: 14px; background: var(--text); color: var(--bg); box-shadow: var(--shadow-3); transform: translateY(12px); opacity: 0; pointer-events: none; transition: all .2s var(--ease); }
+.bulkbar.show { transform: none; opacity: 1; pointer-events: auto; }
+.bulkbar .btn { background: transparent; color: var(--bg); border-color: color-mix(in srgb, var(--bg) 30%, transparent); }
+.bulkbar .btn:hover { background: color-mix(in srgb, var(--bg) 12%, transparent); }
+
+/* ---------- Lists ---------- */
+.list-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.list-item:last-child { border-bottom: 0; }
+.li-icon { width: 30px; height: 30px; border-radius: 9px; background: var(--surface-2); display: grid; place-items: center; color: var(--text-2); flex: none; }
+.li-icon svg { width: 16px; height: 16px; }
+.li-icon.warn { background: color-mix(in srgb, var(--warning) 18%, var(--surface)); color: #8a5a00; }
+.li-icon.crit { background: color-mix(in srgb, var(--critical) 13%, var(--surface)); color: var(--critical); }
+:root[data-theme="dark"] .li-icon.warn { color: var(--warning); }
+.li-main { flex: 1; min-width: 0; }
+.li-title { font-weight: 600; }
+.li-meta { font-size: 12.5px; color: var(--text-3); margin-top: 2px; }
+.li-actions { display: flex; gap: 6px; margin-top: 8px; }
+.li-time { font-size: 12px; color: var(--text-3); white-space: nowrap; }
+.setup-item { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 13.5px; }
+.setup-item .box { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border-strong); display: grid; place-items: center; flex: none; }
+.setup-item.done .box { background: var(--good); border-color: var(--good); color: #fff; }
+.setup-item.done span { color: var(--text-3); text-decoration: line-through; }
+.setup-item .box svg { width: 11px; height: 11px; stroke-width: 3; }
+.setup-item .link { margin-left: auto; font-size: 13px; }
+.assure { display: grid; grid-template-columns: repeat(4, 1fr); }
+.assure div { padding: 14px 20px; border-right: 1px solid var(--border); }
+.assure div:last-child { border-right: 0; }
+.assure b { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
+.assure small { display: block; color: var(--text-3); margin-top: 3px; font-size: 12.5px; }
+.check { width: 18px; height: 18px; border-radius: 50%; background: color-mix(in srgb, var(--good) 16%, var(--surface)); color: var(--good); display: grid; place-items: center; flex: none; }
+.check svg { width: 12px; height: 12px; stroke-width: 2.6; }
+
+/* ---------- Charts ---------- */
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart .grid-line { stroke: var(--border); stroke-width: 1; }
+.chart .axis-text { fill: var(--text-3); font-size: 11px; font-family: var(--font-ui); }
+.chart .series-line { stroke: var(--accent); stroke-width: 2; fill: none; }
+.chart .series-area { fill: var(--accent); opacity: .10; }
+.chart .crosshair { stroke: var(--text-3); stroke-width: 1; }
+.chart .marker { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.tooltip { position: absolute; pointer-events: none; padding: 8px 10px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow-2); font-size: 12.5px; white-space: nowrap; opacity: 0; transition: opacity .12s; z-index: 3; }
+.tooltip strong { display: block; font-size: 14px; }
+.tooltip span { color: var(--text-3); }
+.table-view { margin-top: 6px; font-size: 12.5px; color: var(--text-3); }
+.table-view summary { cursor: pointer; width: max-content; }
+.table-view .table td { height: 30px; }
+.table-view tbody tr { cursor: default; }
+.hbar { display: grid; grid-template-columns: 150px 1fr 64px; align-items: center; gap: 12px; height: 34px; border-radius: 8px; padding: 0 6px; margin: 0 -6px; }
+.hbar:hover { background: var(--surface-2); }
+.hbar .fill { height: 10px; border-radius: 0 4px 4px 0; background: var(--accent); }
+.hbar .name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; }
+.hbar .val { text-align: right; font-size: 12.5px; color: var(--text-2); }
+.spark { display: block; margin-top: 10px; }
+
+/* ---------- Layers ---------- */
+.scrim { position: fixed; inset: 0; background: rgba(15, 16, 20, .28); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity .2s var(--ease); z-index: 20; }
+.scrim.open { opacity: 1; pointer-events: auto; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: 560px; max-width: 94vw; background: var(--surface); border-left: 1px solid var(--border); box-shadow: var(--shadow-3); transform: translateX(104%); transition: transform .3s var(--ease); z-index: 21; display: flex; flex-direction: column; }
+.drawer.open { transform: none; }
+.drawer-head { padding: 20px 24px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 14px; }
+.drawer-head h2 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.02em; }
+.drawer-body { padding: 18px 24px 32px; overflow-y: auto; flex: 1; }
+.kv { display: grid; grid-template-columns: 130px 1fr; row-gap: 10px; font-size: 13.5px; margin: 0; }
+.kv dt { color: var(--text-3); }
+.kv dd { margin: 0; min-width: 0; }
+.section-title { font-size: 12px; font-weight: 600; color: var(--text-3); margin: 22px 0 10px; }
+.gpu { border: 1px solid var(--border); border-radius: var(--radius-m); padding: 12px 14px; margin-bottom: 8px; }
+.gpu-row { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-top: 8px; }
+.gpu-row span:first-child { width: 72px; color: var(--text-3); }
+.gpu-row .num { width: 80px; text-align: right; color: var(--text-2); font-size: 12.5px; }
+.modal { position: fixed; left: 50%; top: 50%; width: 640px; max-width: 94vw; max-height: 88vh; transform: translate(-50%, -48%) scale(.98); opacity: 0; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; box-shadow: var(--shadow-3); transition: opacity .2s var(--ease), transform .25s var(--ease); z-index: 22; display: flex; flex-direction: column; }
+.modal.open { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%); }
+.modal-head { padding: 20px 24px 6px; display: flex; gap: 14px; align-items: center; }
+.modal-head h2 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -.02em; }
+.modal-body { padding: 8px 24px; overflow-y: auto; }
+.modal-foot { padding: 14px 24px 18px; display: flex; align-items: center; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); margin-top: 10px; }
+.modal-foot .left { margin-right: auto; font-size: 12.5px; color: var(--text-3); }
+.form-row { display: grid; grid-template-columns: 160px 1fr; gap: 12px; align-items: center; padding: 8px 0; }
+.form-row > label { color: var(--text-2); font-weight: 500; }
+.form-row .hint { grid-column: 2; font-size: 12.5px; color: var(--text-3); margin-top: -4px; }
+.switch { width: 38px; height: 22px; border-radius: 11px; background: var(--accent); position: relative; cursor: pointer; border: 0; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 19px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: left .2s var(--ease); }
+.switch.off { background: var(--surface-3); }
+.switch.off::after { left: 3px; }
+.notice { display: flex; gap: 10px; padding: 11px 14px; border-radius: var(--radius-m); background: var(--surface-2); font-size: 13px; color: var(--text-2); margin: 8px 0; }
+.notice > svg { color: var(--accent); width: 16px; height: 16px; margin-top: 2px; flex: none; }
+.choice { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; cursor: pointer; margin-bottom: 6px; }
+.choice:hover { background: var(--surface-2); }
+.choice.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.choice b { font-size: 13.5px; }
+.choice small { color: var(--text-3); display: block; font-size: 12px; }
+.choice .right { margin-left: auto; text-align: right; font-size: 12.5px; color: var(--text-2); }
+.recommend { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px; background: var(--accent-soft); color: var(--text); }
+.recommend svg { color: var(--accent-ink); }
+.recommend b { display: block; }
+.recommend small { color: var(--text-2); }
+.recommend .link { margin-left: auto; font-size: 13px; }
+details.advanced { border-top: 1px solid var(--border); margin-top: 10px; padding-top: 10px; }
+details.advanced summary { cursor: pointer; color: var(--text-2); font-weight: 550; padding: 4px 0; }
+.palette { top: 16%; transform: translate(-50%, 0) scale(.98); width: 580px; }
+.palette.open { transform: translate(-50%, 0); }
+.palette input { width: 100%; border: 0; outline: 0; background: none; font-size: 16px; padding: 18px 20px; border-bottom: 1px solid var(--border); color: var(--text); }
+.palette .results { padding: 8px; max-height: 360px; overflow-y: auto; }
+.palette .group { font-size: 11.5px; font-weight: 600; color: var(--text-3); padding: 8px 12px 4px; }
+.palette .result { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; cursor: pointer; color: var(--text-2); }
+.palette .result.on, .palette .result:hover { background: var(--accent-soft); color: var(--text); }
+.toast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 20px); opacity: 0; display: flex; align-items: center; gap: 14px; padding: 10px 10px 10px 16px; border-radius: 12px; background: var(--text); color: var(--bg); box-shadow: var(--shadow-3); z-index: 30; transition: all .25s var(--ease); pointer-events: none; font-size: 13.5px; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.toast button { border: 0; background: color-mix(in srgb, var(--bg) 14%, transparent); color: var(--bg); font-weight: 600; border-radius: 8px; height: 28px; padding: 0 10px; cursor: pointer; }
+
+/* ---------- Deployment ---------- */
+.steps { list-style: none; margin: 0; padding: 0; }
+.step { display: grid; grid-template-columns: 28px 1fr auto; gap: 12px; padding-bottom: 16px; position: relative; }
+.step::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 2px; width: 2px; background: var(--border); }
+.step:last-child::before { display: none; }
+.step.done::before { background: var(--accent); }
+.step-dot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--border-strong); background: var(--surface); color: var(--text-3); font-size: 12px; font-weight: 600; z-index: 1; }
+.step.done .step-dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+.step.active .step-dot { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.step-dot svg { width: 14px; height: 14px; stroke-width: 2.6; }
+.step-title { font-weight: 600; padding-top: 3px; }
+.step-desc { font-size: 12.5px; color: var(--text-3); }
+.step-time { font-size: 12px; color: var(--text-3); padding-top: 4px; }
+.progress { height: 4px; border-radius: 2px; background: var(--surface-3); margin-top: 8px; overflow: hidden; }
+.progress b { display: block; height: 100%; background: var(--accent); transition: width .4s var(--ease); }
+.log { background: var(--log-bg); color: var(--log-text); border-radius: var(--radius-m); font: 12px/1.65 var(--font-mono); padding: 14px 16px; height: 280px; overflow-y: auto; }
+.log div { white-space: pre-wrap; }
+.log .t { color: #7e808a; margin-right: 10px; }
+.log .ok { color: #6fcf7a; }
+.code { position: relative; background: var(--surface-2); border-radius: var(--radius-m); padding: 12px 14px; font: 12.5px/1.6 var(--font-mono); overflow-x: auto; white-space: pre; color: var(--text-2); }
+.code .copy-abs { position: absolute; top: 8px; right: 8px; }
+
+/* ---------- Catalog ---------- */
+.apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--gap); }
+.app { padding: 18px; display: flex; flex-direction: column; gap: 12px; transition: box-shadow .2s var(--ease), border-color .2s; }
+.app:hover { box-shadow: var(--shadow-2); }
+.app-top { display: flex; gap: 12px; align-items: center; }
+.app-logo { width: 42px; height: 42px; border-radius: 11px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 16px; flex: none; }
+.app h4 { margin: 0; font-size: 15px; font-weight: 650; }
+.app p { margin: 0; color: var(--text-2); font-size: 13.5px; flex: 1; }
+.app-foot { display: flex; align-items: center; gap: 8px; }
+.app-foot .btn { margin-left: auto; }
+.featured { grid-column: 1 / -1; display: grid; grid-template-columns: 1.3fr 1fr; overflow: hidden; }
+.featured .left { padding: 24px; display: flex; flex-direction: column; gap: 12px; }
+.featured h3 { font-size: 22px; margin: 0; font-weight: 700; letter-spacing: -.02em; }
+.featured .right { background: var(--surface-2); padding: 24px; display: flex; flex-direction: column; justify-content: center; gap: 8px; border-left: 1px solid var(--border); }
+.bind { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); font-size: 13px; }
+.bind svg { color: var(--accent); width: 16px; height: 16px; }
+.empty { padding: 56px 24px; text-align: center; }
+.empty .ei { width: 48px; height: 48px; border-radius: 14px; background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; margin: 0 auto 14px; }
+.empty h3 { margin: 0 0 6px; font-size: 16px; }
+.empty p { margin: 0 auto 16px; color: var(--text-2); max-width: 420px; }
+.foot-note { text-align: center; color: var(--text-3); font-size: 12px; margin-top: 36px; }
+</style>
+</head>
+<body>
+<!-- Icons: Lucide v1.67.0, ISC license, see licenses/lucide-license.txt -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-overview" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1" /> <rect width="7" height="5" x="14" y="3" rx="1" /> <rect width="7" height="9" x="14" y="12" rx="1" /> <rect width="7" height="5" x="3" y="16" rx="1" /></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect width="20" height="8" x="2" y="2" rx="2" ry="2" /> <rect width="20" height="8" x="2" y="14" rx="2" ry="2" /> <line x1="6" x2="6.01" y1="6" y2="6" /> <line x1="6" x2="6.01" y1="18" y2="18" /></symbol>
+  <symbol id="i-chip" viewBox="0 0 24 24"><path d="M12 20v2" /> <path d="M12 2v2" /> <path d="M17 20v2" /> <path d="M17 2v2" /> <path d="M2 12h2" /> <path d="M2 17h2" /> <path d="M2 7h2" /> <path d="M20 12h2" /> <path d="M20 17h2" /> <path d="M20 7h2" /> <path d="M7 20v2" /> <path d="M7 2v2" /> <rect x="4" y="4" width="16" height="16" rx="2" /> <rect x="8" y="8" width="8" height="8" rx="1" /></symbol>
+  <symbol id="i-cluster" viewBox="0 0 24 24"><rect x="16" y="16" width="6" height="6" rx="1" /> <rect x="2" y="16" width="6" height="6" rx="1" /> <rect x="9" y="2" width="6" height="6" rx="1" /> <path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3" /> <path d="M12 12V8" /></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z" /> <path d="M12 22V12" /> <polyline points="3.29 7 12 12 20.71 7" /> <path d="m7.5 4.27 9 5.15" /></symbol>
+  <symbol id="i-model" viewBox="0 0 24 24"><path d="m16 6 4 14" /> <path d="M12 6v14" /> <path d="M8 8v12" /> <path d="M4 4v16" /></symbol>
+  <symbol id="i-rocket" viewBox="0 0 24 24"><path d="m10.852 14.772-.383.923" /> <path d="M13.148 14.772a3 3 0 1 0-2.296-5.544l-.383-.923" /> <path d="m13.148 9.228.383-.923" /> <path d="m13.53 15.696-.382-.924a3 3 0 1 1-2.296-5.544" /> <path d="m14.772 10.852.923-.383" /> <path d="m14.772 13.148.923.383" /> <path d="M4.5 10H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-.5" /> <path d="M4.5 14H4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-.5" /> <path d="M6 18h.01" /> <path d="M6 6h.01" /> <path d="m9.228 10.852-.923-.383" /> <path d="m9.228 13.148-.923.383" /></symbol>
+  <symbol id="i-route" viewBox="0 0 24 24"><path d="m10.586 5.414-5.172 5.172" /> <path d="m18.586 13.414-5.172 5.172" /> <path d="M6 12h12" /> <circle cx="12" cy="20" r="2" /> <circle cx="12" cy="4" r="2" /> <circle cx="20" cy="12" r="2" /> <circle cx="4" cy="12" r="2" /></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" /> <path d="M3 5V19A9 3 0 0 0 21 19V5" /> <path d="M3 12A9 3 0 0 0 21 12" /></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M10 5H3" /> <path d="M12 19H3" /> <path d="M14 3v4" /> <path d="M16 17v4" /> <path d="M21 12h-9" /> <path d="M21 19h-5" /> <path d="M21 5h-7" /> <path d="M8 10v4" /> <path d="M8 12H3" /></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><rect width="8" height="4" x="8" y="2" rx="1" ry="1" /> <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /> <path d="m9 14 2 2 4-4" /></symbol>
+  <symbol id="i-flow" viewBox="0 0 24 24"><rect width="8" height="8" x="3" y="3" rx="2" /> <path d="M7 11v4a2 2 0 0 0 2 2h4" /> <rect width="8" height="8" x="13" y="13" rx="2" /></symbol>
+  <symbol id="i-puzzle" viewBox="0 0 24 24"><path d="M12 22v-5" /> <path d="M15 8V2" /> <path d="M17 8a1 1 0 0 1 1 1v4a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1z" /> <path d="M9 8V2" /></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /> <path d="M16 3.128a4 4 0 0 1 0 7.744" /> <path d="M22 21v-2a4 4 0 0 0-3-3.87" /> <circle cx="9" cy="7" r="4" /></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" /> <path d="m9 12 2 2 4-4" /></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z" /> <circle cx="16.5" cy="7.5" r=".5" fill="currentColor" /></symbol>
+  <symbol id="i-scroll" viewBox="0 0 24 24"><path d="M15 12h-5" /> <path d="M15 8h-5" /> <path d="M19 17V5a2 2 0 0 0-2-2H4" /> <path d="M8 21h12a2 2 0 0 0 2-2v-1a1 1 0 0 0-1-1H11a1 1 0 0 0-1 1v1a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v2a1 1 0 0 0 1 1h3" /></symbol>
+  <symbol id="i-activity" viewBox="0 0 24 24"><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2" /></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0" /> <path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326" /></symbol>
+  <symbol id="i-archive" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3" /> <path d="M3 12a9 3 0 0 0 5 2.69" /> <path d="M21 9.3V5" /> <path d="M3 5v14a9 3 0 0 0 6.47 2.88" /> <path d="M12 12v4h4" /> <path d="M13 20a5 5 0 0 0 9-3 4.5 4.5 0 0 0-4.5-4.5c-1.33 0-2.54.54-3.41 1.41L12 16" /></symbol>
+  <symbol id="i-badge" viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" /> <path d="m16 9-5.5 5.5L8 12" /></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915" /> <circle cx="12" cy="12" r="3" /></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34" /> <circle cx="11" cy="11" r="8" /></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" /> <path d="M12 2v2" /> <path d="M12 20v2" /> <path d="m4.93 4.93 1.41 1.41" /> <path d="m17.66 17.66 1.41 1.41" /> <path d="M2 12h2" /> <path d="M20 12h2" /> <path d="m6.34 17.66-1.41 1.41" /> <path d="m19.07 4.93-1.41 1.41" /></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" /></symbol>
+  <symbol id="i-rows" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2" /> <path d="M21 9H3" /> <path d="M21 15H3" /></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6" /></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18" /> <path d="m6 6 12 12" /></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14" /> <path d="M12 5v14" /></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5" /></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" /> <path d="M12 9v4" /> <path d="M12 17h.01" /></symbol>
+  <symbol id="i-offline" viewBox="0 0 24 24"><path d="M12 20h.01" /> <path d="M8.5 16.429a5 5 0 0 1 7 0" /> <path d="M5 12.859a10 10 0 0 1 5.17-2.69" /> <path d="M19 12.859a10 10 0 0 0-2.007-1.523" /> <path d="M2 8.82a15 15 0 0 1 4.177-2.643" /> <path d="M22 8.82a15 15 0 0 0-11.288-3.764" /> <path d="m2 2 20 20" /></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect width="18" height="11" x="3" y="11" rx="2" ry="2" /> <path d="M7 11V7a5 5 0 0 1 10 0v4" /></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" /> <path d="M14 2v5a1 1 0 0 0 1 1h5" /> <path d="M10 9H8" /> <path d="M16 13H8" /> <path d="M16 17H8" /></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /> <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1" /> <circle cx="19" cy="12" r="1" /> <circle cx="5" cy="12" r="1" /></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z" /></symbol>
+  <symbol id="i-wand" viewBox="0 0 24 24"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" /> <path d="M9 18h6" /> <path d="M10 22h4" /></symbol>
+  <symbol id="i-terminal" viewBox="0 0 24 24"><path d="m7 11 2-2-2-2" /> <path d="M11 13h4" /> <rect width="18" height="18" x="3" y="3" rx="2" ry="2" /></symbol>
+  <symbol id="i-thermo" viewBox="0 0 24 24"><path d="M14 4v10.54a4 4 0 1 1-4 0V4a2 2 0 0 1 4 0Z" /></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><path d="M16 14v2.2l1.6 1" /> <path d="M16 2v3" /> <path d="M21 7.338V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2h2.338" /> <path d="M3 9h5.859" /> <path d="M8 2v3" /> <circle cx="16" cy="16" r="6" /></symbol>
+</svg>
+
+<div class="shell">
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="brand"><div class="brand-mark"><span></span></div><div class="brand-name">ownsolid</div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-foot"><div class="airgap"><span class="pulse"></span><div><b>Air-gapped</b><small>No outbound traffic · license valid</small></div></div></div>
+  </aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="crumbs" id="crumbs"></div>
+      <div class="search" id="open-palette" role="button" tabindex="0"><svg class="icon"><use href="#i-search"/></svg><span>Search, or type a command</span><kbd>&#8984;K</kbd></div>
+      <div class="workspace" title="Switch workspace"><span class="ws-dot"></span>Research Lab<svg class="icon" style="width:14px;height:14px;color:var(--text-3)"><use href="#i-down"/></svg></div>
+      <button class="icon-btn" id="density" title="Compact or comfortable density"><svg class="icon"><use href="#i-rows"/></svg></button>
+      <button class="icon-btn" id="theme" title="Light or dark theme"><svg class="icon"><use href="#i-moon"/></svg></button>
+      <button class="icon-btn" title="Notifications: 3 need attention"><svg class="icon"><use href="#i-bell"/></svg><span class="dot"></span></button>
+      <div class="avatar" title="Passion, platform admin">P</div>
+    </header>
+    <main class="content" id="content"></main>
+  </div>
+</div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Details"></aside>
+<div class="modal" id="modal" role="dialog" aria-modal="true"></div>
+<div class="modal palette" id="palette" role="dialog" aria-modal="true">
+  <input id="palette-input" placeholder="Type a command or search: deploy, gpu-a01, DeepParser" autocomplete="off">
+  <div class="results" id="palette-results"></div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ---------- Sample data (prototype only) ---------- */
+const NAV = [
+  { group: "", items: [["overview", "Overview", "i-overview"]] },
+  { group: "Infrastructure", items: [["nodes", "Nodes", "i-server", "7"], ["accelerators", "Accelerators", "i-chip", "16"], ["clusters", "Clusters", "i-cluster"]] },
+  { group: "Applications", items: [["catalog", "App catalog", "i-store"], ["workflows", "Workflows and agents", "i-flow"], ["plugins", "Plugins and MCP", "i-puzzle"]] },
+  { group: "Models", items: [["models", "Model services", "i-rocket", "5"], ["library", "Model library", "i-model"], ["gateway", "Gateway and keys", "i-route"]] },
+  { group: "Training", items: [["datasets", "Datasets", "i-db"], ["finetune", "Fine-tuning", "i-flask"], ["evaluation", "Evaluation", "i-gauge"]] },
+  { group: "Governance", items: [["users", "Users and workspaces", "i-users"], ["roles", "Roles", "i-shield"], ["sso", "Single sign-on", "i-key"], ["audit", "Audit trail", "i-scroll"]] },
+  { group: "Operations", items: [["monitoring", "Monitoring", "i-activity"], ["alerts", "Alerts", "i-bell"], ["backups", "Backups and upgrades", "i-archive"]] },
+  { group: "System", items: [["license", "License", "i-badge"], ["settings", "Settings", "i-settings"]] },
+];
+const BUILT = new Set(["overview", "nodes", "models", "catalog"]);
+const NODES = [
+  { name: "gpu-a01", ip: "10.20.1.11", status: "good", label: "Online", os: "Ubuntu 24.04", arch: "amd64", cpu: 62, mem: 71, gpus: [1, 1, 1, 1, 1, 1, 0, 0], gpuModel: "NVIDIA H20 96 GB", agent: "1.0.3", seen: "now" },
+  { name: "gpu-a02", ip: "10.20.1.12", status: "good", label: "Online", os: "Ubuntu 24.04", arch: "amd64", cpu: 48, mem: 55, gpus: [1, 1, 1, 0, 0, 0, 0, 0], gpuModel: "NVIDIA H20 96 GB", agent: "1.0.3", seen: "now" },
+  { name: "npu-k01", ip: "10.20.2.21", status: "warn", label: "Degraded", os: "Kylin V11", arch: "arm64", cpu: 81, mem: 77, gpus: [1, 1, 1, 1, 1, 1, 1, 0], gpuModel: "Ascend 910B 64 GB", agent: "1.0.3", seen: "12 s ago" },
+  { name: "cpu-s01", ip: "10.20.3.31", status: "good", label: "Online", os: "Ubuntu 24.04", arch: "amd64", cpu: 23, mem: 38, gpus: [], gpuModel: "None", agent: "1.0.3", seen: "now" },
+  { name: "cpu-s02", ip: "10.20.3.32", status: "good", label: "Online", os: "UOS Server 25", arch: "amd64", cpu: 31, mem: 44, gpus: [], gpuModel: "None", agent: "1.0.3", seen: "now" },
+  { name: "edge-e01", ip: "10.30.0.5", status: "good", label: "Online", os: "Ubuntu 24.04", arch: "amd64", cpu: 12, mem: 20, gpus: [0], gpuModel: "NVIDIA L4 24 GB", agent: "1.0.2", seen: "now" },
+  { name: "gpu-a03", ip: "10.20.1.13", status: "crit", label: "Offline", os: "Ubuntu 24.04", arch: "amd64", cpu: 0, mem: 0, gpus: [0, 0, 0, 0, 0, 0, 0, 0], gpuModel: "NVIDIA H20 96 GB", agent: "1.0.3", seen: "41 min ago" },
+];
+const SERVICES = [
+  { name: "qwen3-32b-instruct", model: "Qwen3-32B", engine: "vLLM 0.31", node: "gpu-a02", status: "live", label: "Deploying", replicas: "0 / 1", rpm: "-" },
+  { name: "deepseek-v3-chat", model: "DeepSeek-V3.2", engine: "vLLM 0.31", node: "gpu-a01, gpu-a02", status: "good", label: "Ready", replicas: "2 / 2", rpm: "1,284" },
+  { name: "bge-m3-embed", model: "BGE-M3", engine: "Text Embeddings", node: "edge-e01", status: "good", label: "Ready", replicas: "1 / 1", rpm: "3,902" },
+  { name: "qwen3-8b-ascend", model: "Qwen3-8B", engine: "vLLM-Ascend 0.30", node: "npu-k01", status: "warn", label: "Degraded", replicas: "1 / 2", rpm: "214" },
+  { name: "bge-reranker", model: "BGE-Reranker-v2", engine: "Text Embeddings", node: "edge-e01", status: "good", label: "Ready", replicas: "1 / 1", rpm: "867" },
+];
+const LIBRARY = [
+  { name: "Qwen3-32B", kind: "Chat", size: "65.5 GB", need: "2 cards · 96 GB" },
+  { name: "Qwen3-8B", kind: "Chat", size: "16.4 GB", need: "1 card · 24 GB" },
+  { name: "GLM-4.6-Air", kind: "Chat", size: "214 GB", need: "4 cards · 96 GB" },
+  { name: "BGE-M3", kind: "Embedding", size: "2.3 GB", need: "1 card or CPU" },
+];
+const APPS = [
+  { name: "PostgreSQL", tag: "Database", color: "#336791", desc: "Relational database with pgvector, for application data.", ver: "18.1" },
+  { name: "Valkey", tag: "Cache", color: "#6a3e9e", desc: "In-memory data store for caching, sessions and queues.", ver: "9.0" },
+  { name: "Grafana", tag: "Observability", color: "#e46f2c", desc: "Dashboards for metrics and logs from every node and service.", ver: "12.3" },
+  { name: "Prometheus", tag: "Observability", color: "#c4422b", desc: "Metrics collection and alerting, preconfigured for ownsolid.", ver: "3.7" },
+  { name: "JupyterLab", tag: "Development", color: "#d9822b", desc: "Notebooks connected to workspace models and datasets.", ver: "4.5" },
+  { name: "Label Studio", tag: "Data", color: "#3b6fe0", desc: "Annotation for training and evaluation datasets.", ver: "1.20" },
+];
+const LINE = [38,35,33,31,30,29,31,36,44,52,61,67,71,74,72,76,79,77,73,70,66,63,61,64];
+const MODEL_USE = [["deepseek-v3-chat", 21480], ["bge-m3-embed", 14210], ["bge-reranker", 6120], ["qwen3-8b-ascend", 4310], ["deepparser · chat", 2090]];
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const icon = (id, cls = "") => `<svg class="icon ${cls}"><use href="#${id}"/></svg>`;
+const pill = (s, label) => `<span class="pill ${s}"><i></i>${label}</span>`;
+const meter = (v, accent) => `<div class="meter ${accent ? "accent" : ""}"><b style="width:${v}%"></b></div>`;
+const copyable = (text, mono = true) => `<span class="copy"><span class="${mono ? "mono" : ""}">${text}</span><button data-copy="${text.replace(/"/g, "&quot;")}" title="Copy">${icon("i-copy")}</button></span>`;
+const fmt = n => n.toLocaleString("en-US");
+
+/* ---------- Feedback ---------- */
+let toastTimer = null;
+function toast(message, undo) {
+  const el = $("#toast");
+  el.replaceChildren();
+  const span = document.createElement("span"); span.textContent = message; el.append(span);
+  if (undo) {
+    const b = document.createElement("button"); b.textContent = "Undo";
+    b.addEventListener("click", () => { undo(); hideToast(); toast("Change undone"); });
+    el.append(b);
+  }
+  el.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(hideToast, undo ? 6000 : 2400);
+}
+function hideToast() { $("#toast").classList.remove("show"); }
+document.addEventListener("click", e => {
+  const c = e.target.closest("[data-copy]");
+  if (c) { e.stopPropagation(); navigator.clipboard?.writeText(c.dataset.copy).catch(() => {}); toast("Copied to clipboard"); }
+});
+
+/* ---------- Navigation ---------- */
+function renderNav(active) {
+  $("#nav").innerHTML = NAV.map(g => `<div class="nav-group">${g.group ? `<div class="nav-label">${g.group}</div>` : ""}${g.items.map(([id, label, ic, count]) =>
+    `<a class="nav-item ${id === active ? "active" : ""} ${BUILT.has(id) ? "" : "disabled"}" ${BUILT.has(id) ? `href="#${id}"` : `title="Not part of this prototype"`}>${icon(ic)}<span>${label}</span>${count ? `<span class="count">${count}</span>` : ""}</a>`).join("")}</div>`).join("");
+  const item = NAV.flatMap(g => g.items.map(i => [g.group, ...i])).find(i => i[1] === active);
+  $("#crumbs").innerHTML = `${item[0] ? `<span>${item[0]}</span>${icon("i-chevron")}` : ""}<b>${item[2]}</b>`;
+}
+const VIEWS = { overview: viewOverview, nodes: viewNodes, models: viewModels, catalog: viewCatalog };
+function route() {
+  const [id, arg] = (location.hash.slice(1) || "overview").split("/");
+  const view = VIEWS[id] ? id : "overview";
+  closeAll();
+  renderNav(view);
+  $("#content").innerHTML = `<div class="page">${VIEWS[view]()}</div>`;
+  $("#content").scrollTop = 0;
+  if (view === "overview") { mountLineChart(); if (arg === "deploy") openDeploy(); }
+  if (view === "nodes") { mountNodes(); const n = NODES.find(n => n.name === arg); if (n) openNode(n); }
+  if (view === "models") mountDeployment();
+  if (view === "catalog") {
+    if (arg === "installed") installed = true;
+    mountCatalog(arg === "installed" ? "installed" : "catalog");
+    if (arg === "install") openInstall();
+  }
+}
+
+/* ---------- Overview ---------- */
+function sparkline(values, w = 120, h = 28) {
+  const max = Math.max(...values), min = Math.min(...values), step = w / (values.length - 1);
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true">${values.map((v, i) => {
+    const bh = Math.max(3, ((v - min) / (max - min || 1)) * (h - 4) + 3);
+    return `<rect x="${i * step - 2}" y="${h - bh}" width="4" height="${bh}" rx="2" fill="${i === values.length - 1 ? "var(--accent)" : "var(--deemph)"}"/>`;
+  }).join("")}</svg>`;
+}
+function viewOverview() {
+  return `
+  <div class="page-head"><div><h1>Good afternoon, Passion</h1><p>Everything is running inside your network. 3 items need your attention.</p></div>
+    <div class="actions"><button class="btn">${icon("i-file")}Export audit report</button></div></div>
+  <div class="grid g-4 mb">
+    <div class="card quick" data-action="deploy"><div class="qi">${icon("i-rocket")}</div><div><b>Deploy a model</b><small>Placement picked for you</small></div><kbd>D</kbd></div>
+    <div class="card quick" data-action="install"><div class="qi">${icon("i-store")}</div><div><b>Install an app</b><small>DeepParser and 6 more</small></div><kbd>I</kbd></div>
+    <div class="card quick" data-action="node"><div class="qi">${icon("i-server")}</div><div><b>Add a node</b><small>One command to enroll</small></div><kbd>N</kbd></div>
+    <div class="card quick" data-action="key"><div class="qi">${icon("i-key")}</div><div><b>Create an API key</b><small>Scoped, with a budget</small></div><kbd>K</kbd></div>
+  </div>
+  <div class="grid g-5 mb">
+    <div class="card tile"><div class="label">Nodes online</div><div class="value num">6<small>/ 7</small></div><div class="foot">${pill("crit", "gpu-a03 offline")}</div></div>
+    <div class="card tile"><div class="label">Accelerators in use</div><div class="value num">11<small>/ 16</small></div><div class="foot">${meter(69, true)}<span class="num">69%</span></div></div>
+    <div class="card tile"><div class="label">Model services</div><div class="value num">4<small>ready</small></div><div class="foot">1 deploying · 1 degraded</div></div>
+    <div class="card tile"><div class="label">Gateway requests today</div><div class="value num">48.2k</div>${sparkline([22, 28, 25, 31, 36, 34, 41, 39, 45, 48])}</div>
+    <div class="card tile"><div class="label">Installed apps</div><div class="value num">4</div><div class="foot">DeepParser, Grafana, +2</div></div>
+  </div>
+  <div class="grid g-2 mb">
+    <div class="card"><div class="card-head"><h3>Needs attention</h3><span class="sub">Each item says what to do next</span></div><div class="card-body">
+      <div class="list-item"><div class="li-icon crit">${icon("i-alert")}</div><div class="li-main"><div class="li-title">gpu-a03 stopped reporting 41 minutes ago</div><div class="li-meta">8 accelerators unavailable. Likely cause: the agent stopped or the host lost power.</div>
+        <div class="li-actions"><button class="btn sm primary" data-goto="nodes/gpu-a03">${icon("i-terminal")}Run diagnostics</button><button class="btn sm" data-goto="nodes/gpu-a03">View last logs</button></div></div><div class="li-time">14:02</div></div>
+      <div class="list-item"><div class="li-icon warn">${icon("i-thermo")}</div><div class="li-main"><div class="li-title">npu-k01 card 6 is above 88°C</div><div class="li-meta">qwen3-8b-ascend is running on 1 of 2 replicas. Moving it keeps the service at full capacity.</div>
+        <div class="li-actions"><button class="btn sm" data-toast="Replica moved to npu-k01 card 7">Move replica to card 7</button><button class="btn sm ghost">Snooze 1 h</button></div></div><div class="li-time">13:47</div></div>
+      <div class="list-item"><div class="li-icon warn">${icon("i-calendar")}</div><div class="li-main"><div class="li-title">License renewal due in 58 days</div><div class="li-meta">Import the new license file before 2027-01-01. Nothing stops working until then.</div>
+        <div class="li-actions"><button class="btn sm">Import license file</button></div></div><div class="li-time">09:00</div></div>
+    </div></div>
+    <div class="card"><div class="card-head"><h3>Finish setup</h3><span class="sub">4 of 6 done</span></div><div class="card-body">
+      <div class="meter accent" style="margin:4px 0 10px"><b style="width:67%"></b></div>
+      <div class="setup-item done"><div class="box">${icon("i-check")}</div><span>Install from the offline bundle</span></div>
+      <div class="setup-item done"><div class="box">${icon("i-check")}</div><span>Enroll the first GPU node</span></div>
+      <div class="setup-item done"><div class="box">${icon("i-check")}</div><span>Deploy a model</span></div>
+      <div class="setup-item done"><div class="box">${icon("i-check")}</div><span>Invite your team</span></div>
+      <div class="setup-item"><div class="box"></div><span>Connect company sign-in (OIDC or LDAP)</span><a class="link">Set up</a></div>
+      <div class="setup-item"><div class="box"></div><span>Schedule nightly backups</span><a class="link">Set up</a></div>
+    </div></div>
+  </div>
+  <div class="grid g-2 mb">
+    <div class="card"><div class="card-head"><h3>Accelerator utilization</h3><span class="sub">All nodes · last 24 hours</span><div class="right segmented"><button>1h</button><button class="on">24h</button><button>7d</button></div></div>
+      <div class="card-body"><div class="chart" id="line-chart"><div class="tooltip" id="line-tip"></div></div>
+        <details class="table-view"><summary>Show as table</summary><table class="table"><thead><tr><th>Hour</th><th>Utilization</th></tr></thead><tbody>${LINE.map((v, i) => `<tr><td>${String(i).padStart(2, "0")}:00</td><td class="num">${v}%</td></tr>`).join("")}</tbody></table></details></div></div>
+    <div class="card"><div class="card-head"><h3>Gateway requests by service</h3><span class="sub">Today</span></div><div class="card-body">${hbars()}</div></div>
+  </div>
+  <div class="card"><div class="card-head"><h3>Air-gap assurance</h3><span class="sub">Checked continuously, no network required</span></div>
+    <div class="assure">
+      <div><b><span class="check">${icon("i-check")}</span>0 outbound connections</b><small>Egress policy enforced on all 7 nodes</small></div>
+      <div><b><span class="check">${icon("i-check")}</span>All images signed</b><small>42 of 42 verified against the bundle</small></div>
+      <div><b><span class="check">${icon("i-check")}</span>License verified offline</b><small>Whole platform · valid to 2027-01-01</small></div>
+      <div><b><span class="check">${icon("i-check")}</span>Audit log intact</b><small>Hash chain verified 2 min ago</small></div>
+    </div></div>
+  <p class="foot-note">Prototype with sample data. Shortcuts: D deploy · I install · N add node · K API key · &#8984;K command menu</p>`;
+}
+function hbars() {
+  const max = Math.max(...MODEL_USE.map(m => m[1]));
+  return MODEL_USE.map(([n, v]) => `<div class="hbar" title="${n}: ${fmt(v)} requests"><span class="name mono">${n}</span><div><div class="fill" style="width:${(v / max) * 100}%"></div></div><span class="val num">${fmt(v)}</span></div>`).join("");
+}
+function mountLineChart() {
+  const el = $("#line-chart"), tip = $("#line-tip");
+  const W = el.clientWidth, H = 220, P = { l: 36, r: 8, t: 14, b: 26 };
+  const x = i => P.l + (i / (LINE.length - 1)) * (W - P.l - P.r);
+  const y = v => P.t + (1 - v / 100) * (H - P.t - P.b);
+  const pts = LINE.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+  const grid = [0, 25, 50, 75, 100].map(v => `<line class="grid-line" x1="${P.l}" x2="${W - P.r}" y1="${y(v)}" y2="${y(v)}"/><text class="axis-text" x="${P.l - 8}" y="${y(v) + 4}" text-anchor="end">${v}%</text>`).join("");
+  const xl = [0, 6, 12, 18, 23].map(i => `<text class="axis-text" x="${x(i)}" y="${H - 6}" text-anchor="middle">${String(i).padStart(2, "0")}:00</text>`).join("");
+  el.insertAdjacentHTML("afterbegin", `<svg height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Accelerator utilization over 24 hours, from 29% overnight to a peak of 79% at 16:00">
+    ${grid}${xl}<polygon class="series-area" points="${x(0)},${y(0)} ${pts} ${x(LINE.length - 1)},${y(0)}"/><polyline class="series-line" points="${pts}"/>
+    <text class="axis-text" x="${x(16)}" y="${y(79) - 10}" text-anchor="middle" style="fill:var(--text);font-weight:600">Peak 79%</text>
+    <line class="crosshair" id="xh" y1="${P.t}" y2="${H - P.b}" style="opacity:0"/><circle class="marker" id="mk" r="4.5" style="opacity:0"/>
+    <rect id="hit" x="${P.l}" y="0" width="${W - P.l - P.r}" height="${H}" fill="transparent"/></svg>`);
+  const hit = $("#hit", el), xh = $("#xh", el), mk = $("#mk", el);
+  hit.addEventListener("pointermove", e => {
+    const r = el.getBoundingClientRect();
+    const i = Math.max(0, Math.min(LINE.length - 1, Math.round(((e.clientX - r.left - P.l) / (W - P.l - P.r)) * (LINE.length - 1))));
+    xh.setAttribute("x1", x(i)); xh.setAttribute("x2", x(i)); xh.style.opacity = 1;
+    mk.setAttribute("cx", x(i)); mk.setAttribute("cy", y(LINE[i])); mk.style.opacity = 1;
+    const s = document.createElement("strong"); s.textContent = LINE[i] + "%";
+    const sp = document.createElement("span"); sp.textContent = String(i).padStart(2, "0") + ":00 · utilization";
+    tip.replaceChildren(s, sp); tip.style.opacity = 1;
+    tip.style.left = Math.min(x(i) + 12, W - 130) + "px"; tip.style.top = (y(LINE[i]) - 50) + "px";
+  });
+  hit.addEventListener("pointerleave", () => { xh.style.opacity = 0; mk.style.opacity = 0; tip.style.opacity = 0; });
+}
+
+/* ---------- Deploy model (smart defaults) ---------- */
+function openDeploy() {
+  let pick = 0;
+  const paint = () => {
+    const m = LIBRARY[pick];
+    const place = m.kind === "Embedding" ? ["edge-e01", "1 free L4 card", "fits with 70% memory to spare"] : pick === 2 ? ["gpu-a01 + gpu-a02", "4 free H20 cards", "fits with 18% memory to spare"] : ["gpu-a02", pick === 0 ? "2 free H20 cards" : "1 free H20 card", pick === 0 ? "fits with 31% memory to spare" : "fits with 74% memory to spare"];
+    $("#modal").innerHTML = `
+      <div class="modal-head"><div class="qi" style="width:40px;height:40px;border-radius:11px;background:var(--accent-soft);color:var(--accent-ink);display:grid;place-items:center">${icon("i-rocket")}</div><div><h2>Deploy a model</h2><div class="subtle" style="font-size:13px">Pick a model. ownsolid chooses the engine, node and cards.</div></div><button class="icon-btn" data-close style="margin-left:auto">${icon("i-x")}</button></div>
+      <div class="modal-body">
+        <div class="section-title" style="margin-top:6px">Model from the local library</div>
+        ${LIBRARY.map((l, i) => `<div class="choice ${i === pick ? "on" : ""}" data-pick="${i}"><input type="radio" ${i === pick ? "checked" : ""} tabindex="-1"><div><b>${l.name}</b><small>${l.kind} · ${l.size}</small></div><div class="right">${l.need}</div></div>`).join("")}
+        <div class="section-title">Placement</div>
+        <div class="recommend">${icon("i-wand")}<div><b>Recommended: ${place[0]}</b><small>${place[1]} · ${place[2]} · no other service affected</small></div><a class="link">Change</a></div>
+        <div class="form-row" style="margin-top:8px"><label>Service name</label><div class="field"><input value="${m.name.toLowerCase().replace(/\./g, "")}${m.kind === "Chat" ? "-instruct" : ""}"></div></div>
+        <div class="form-row"><label>Who can use it</label><select class="field"><option>Research Lab (12 members)</option><option>All workspaces</option></select></div>
+        <details class="advanced"><summary>Advanced options</summary>
+          <div class="form-row"><label>Engine</label><select class="field"><option>vLLM 0.31 (recommended)</option><option>SGLang 0.6</option></select></div>
+          <div class="form-row"><label>Replicas</label><div class="field"><input value="1"></div></div>
+          <div class="form-row"><label>Max context</label><select class="field"><option>32,768 tokens (recommended)</option><option>131,072 tokens</option></select></div>
+        </details>
+      </div>
+      <div class="modal-foot"><span class="left">Takes about 1 minute · runs fully offline</span><button class="btn" data-close>Cancel</button><button class="btn primary" id="do-deploy">Deploy<kbd>&#8984;&#8629;</kbd></button></div>`;
+    $$("[data-pick]", $("#modal")).forEach(c => c.addEventListener("click", () => { pick = +c.dataset.pick; paint(); }));
+    $("#do-deploy").addEventListener("click", () => { closeAll(); location.hash = "models"; toast("Deployment started. You can leave this page; it continues in the background."); });
+  };
+  paint(); openLayer("#modal");
+}
+
+/* ---------- Nodes ---------- */
+function viewNodes() {
+  return `
+  <div class="page-head"><div><h1>Nodes</h1><p>Linux hosts enrolled through the ownsolid agent. Select rows for bulk actions, or open a node for details.</p></div>
+    <div class="actions"><button class="btn primary" data-action="node">${icon("i-plus")}Add node<kbd>N</kbd></button></div></div>
+  <div class="toolbar">
+    <div class="field grow">${icon("i-search")}<input id="node-q" placeholder="Filter by name or IP  ( / )"></div>
+    <div class="segmented" id="node-seg"><button class="on" data-f="all">All 7</button><button data-f="good">Online 5</button><button data-f="warn">Degraded 1</button><button data-f="crit">Offline 1</button></div>
+    <select class="field" style="width:auto"><option>All architectures</option><option>amd64</option><option>arm64</option></select>
+    <span class="subtle" style="margin-left:auto;font-size:12.5px">Filters are remembered</span>
+  </div>
+  <div class="card" style="overflow:hidden"><table class="table"><thead><tr><th class="w-check"><input type="checkbox" id="check-all" aria-label="Select all"></th><th>Node</th><th>Status</th><th>Accelerators</th><th>CPU</th><th>Memory</th><th>System</th><th>Last seen</th><th></th></tr></thead><tbody id="node-rows"></tbody></table></div>
+  <div class="bulkbar" id="bulkbar"><span id="bulk-count"></span><button class="btn sm">Drain</button><button class="btn sm">Upgrade agent</button><button class="btn sm" id="bulk-remove">Remove from workspace</button><button class="btn sm" id="bulk-clear">${icon("i-x")}</button></div>
+  <p class="foot-note">Prototype with sample data.</p>`;
+}
+let nodeFilter = "all";
+const selected = new Set();
+function nodeRows() {
+  const q = ($("#node-q")?.value || "").trim();
+  return NODES.filter(n => (nodeFilter === "all" || n.status === nodeFilter) && (n.name + n.ip).includes(q)).map(n => `
+    <tr data-node="${n.name}" class="${selected.has(n.name) ? "sel" : ""}"><td class="w-check"><input type="checkbox" data-sel="${n.name}" ${selected.has(n.name) ? "checked" : ""} aria-label="Select ${n.name}"></td>
+    <td><div class="cell-title">${n.name}</div><div class="cell-sub mono">${n.ip}</div></td>
+    <td>${pill(n.status, n.label)}</td>
+    <td>${n.gpus.length ? `<div class="chips" title="${n.gpus.filter(Boolean).length} of ${n.gpus.length} in use">${n.gpus.map(b => `<span class="chip-gpu ${n.status === "crit" ? "" : b ? "busy" : "idle"}"></span>`).join("")}</div><div class="cell-sub">${n.gpuModel}</div>` : `<span class="subtle">CPU only</span>`}</td>
+    <td><div class="bar-cell">${meter(n.cpu)}<span class="num">${n.cpu}%</span></div></td>
+    <td><div class="bar-cell">${meter(n.mem)}<span class="num">${n.mem}%</span></div></td>
+    <td>${n.os}<div class="cell-sub">${n.arch}</div></td>
+    <td class="subtle">${n.seen}</td>
+    <td><div class="row-actions"><button class="icon-btn" title="Open terminal" data-toast="Terminal opens in a new tab">${icon("i-terminal")}</button><button class="icon-btn" title="More actions">${icon("i-more")}</button></div></td></tr>`).join("");
+}
+function paintBulk() {
+  $("#bulk-count").textContent = `${selected.size} selected`;
+  $("#bulkbar").classList.toggle("show", selected.size > 0);
+}
+function mountNodes() {
+  const paint = () => { $("#node-rows").innerHTML = nodeRows(); paintBulk(); };
+  paint();
+  $("#node-seg").addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; nodeFilter = b.dataset.f; $$("#node-seg button").forEach(c => c.classList.toggle("on", c === b)); paint(); });
+  $("#node-q").addEventListener("input", paint);
+  $("#check-all").addEventListener("change", e => { NODES.forEach(n => e.target.checked ? selected.add(n.name) : selected.delete(n.name)); paint(); });
+  $("#bulk-clear").addEventListener("click", () => { selected.clear(); $("#check-all").checked = false; paint(); });
+  $("#bulk-remove").addEventListener("click", () => {
+    const removed = [...selected]; selected.clear(); paint();
+    toast(`${removed.length} node${removed.length > 1 ? "s" : ""} removed from Research Lab`, () => { removed.forEach(n => selected.add(n)); paint(); });
+  });
+  $("#node-rows").addEventListener("click", e => {
+    if (e.target.closest(".row-actions")) return;
+    const box = e.target.closest("[data-sel]");
+    if (box) { box.checked ? selected.add(box.dataset.sel) : selected.delete(box.dataset.sel); paint(); return; }
+    const tr = e.target.closest("tr"); if (tr) openNode(NODES.find(n => n.name === tr.dataset.node));
+  });
+}
+function openNode(n) {
+  const temps = [61, 64, 66, 63, 70, 72, 58, 55];
+  const offline = n.status === "crit";
+  $("#drawer").innerHTML = `
+    <div class="drawer-head"><div style="flex:1"><h2>${n.name}</h2><div style="margin-top:6px;display:flex;gap:10px;align-items:center">${pill(n.status, n.label)}${copyable(n.ip)}</div></div>
+      <button class="icon-btn" data-close title="Close (Esc)">${icon("i-x")}</button></div>
+    <div class="drawer-body">
+      ${offline ? `<div class="notice" style="background:color-mix(in srgb,var(--critical) 10%,var(--surface))">${icon("i-alert")}<div><b style="color:var(--text)">No heartbeat for 41 minutes.</b><br>Check that the host is powered on, then run diagnostics. If the agent stopped, restart it with:<div class="code" style="margin-top:8px">sudo systemctl restart ownsolid-agent<span class="copy-abs copy"><button data-copy="sudo systemctl restart ownsolid-agent" title="Copy">${icon("i-copy")}</button></span></div><div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm primary">${icon("i-terminal")}Run diagnostics</button><button class="btn sm">Download diagnostic bundle</button></div></div></div>` : ""}
+      <div class="section-title">System</div>
+      <dl class="kv"><dt>Operating system</dt><dd>${n.os} · ${n.arch}</dd><dt>CPU</dt><dd>2 × 64 cores · ${n.cpu}% used</dd><dt>Memory</dt><dd>1.5 TB · ${n.mem}% used</dd><dt>Agent</dt><dd>${n.agent} · systemd</dd><dt>Workspaces</dt><dd><span class="tag">Research Lab</span> <span class="tag">Customer Service</span></dd></dl>
+      <div class="section-title">Accelerators · ${n.gpuModel}</div>
+      ${n.gpus.length ? n.gpus.slice(0, 4).map((b, i) => `<div class="gpu"><div style="display:flex;align-items:center;gap:10px"><b>Card ${i}</b>${offline ? `<span class="tag">Unavailable</span>` : b ? `<span class="tag accent">${i < 2 ? "deepseek-v3-chat" : "qwen3-32b-instruct"}</span>` : `<span class="tag">Idle</span>`}<span class="subtle" style="margin-left:auto">${offline ? "-" : temps[i] + "°C"}</span></div>
+        <div class="gpu-row"><span>Utilization</span>${meter(!offline && b ? 70 + i * 4 : 0, true)}<span class="num">${!offline && b ? 70 + i * 4 : 0}%</span></div>
+        <div class="gpu-row"><span>Memory</span>${meter(offline ? 0 : b ? 82 : 2)}<span class="num">${offline ? "-" : b ? "78.7 / 96 GB" : "1.9 / 96 GB"}</span></div></div>`).join("") + (n.gpus.length > 4 ? `<button class="btn ghost sm">Show ${n.gpus.length - 4} more cards</button>` : "") : `<p class="muted">This node has no accelerators. It runs CPU workloads and catalog apps.</p>`}
+      <div class="section-title">Recent tasks</div>
+      <div class="list-item"><div class="li-icon">${icon("i-rocket")}</div><div class="li-main"><div class="li-title">Deploy qwen3-32b-instruct</div><div class="li-meta">Started by Passion</div></div>${pill(offline ? "crit" : "live", offline ? "Paused" : "Running")}</div>
+      <div class="list-item"><div class="li-icon">${icon("i-activity")}</div><div class="li-main"><div class="li-title">Upgrade node-exporter to 1.12.1</div><div class="li-meta">System · offline bundle 2026.11</div></div>${pill("good", "Done")}</div>
+    </div>`;
+  openLayer("#drawer");
+}
+
+/* ---------- Model services ---------- */
+function viewModels() {
+  return `
+  <div class="page-head"><div><h1>Model services</h1><p>Models served through the gateway. Every call is attributed to a user and a workspace.</p></div>
+    <div class="actions"><button class="btn">${icon("i-model")}Model library</button><button class="btn primary" data-action="deploy">${icon("i-plus")}Deploy model<kbd>D</kbd></button></div></div>
+  <div class="card mb" style="overflow:hidden"><table class="table"><thead><tr><th>Service</th><th>Status</th><th>Engine</th><th>Nodes</th><th>Replicas</th><th>Requests / min</th><th></th></tr></thead><tbody>
+    ${SERVICES.map((s, i) => `<tr class="${i === 0 ? "sel" : ""}"><td><div class="cell-title mono" style="font-size:13.5px">${s.name}</div><div class="cell-sub">${s.model}</div></td><td ${i === 0 ? 'id="row-status"' : ""}>${pill(s.status, s.label)}</td><td>${s.engine}</td><td class="muted">${s.node}</td><td class="num" ${i === 0 ? 'id="row-replicas"' : ""}>${s.replicas}</td><td class="num">${s.rpm}</td>
+      <td><div class="row-actions"><button class="icon-btn" title="Try in playground">${icon("i-play")}</button><button class="icon-btn" title="Copy model alias" data-copy="${s.name}">${icon("i-copy")}</button></div></td></tr>`).join("")}
+  </tbody></table></div>
+  <div class="grid g-2">
+    <div class="card"><div class="card-head"><h3 class="mono" style="font-size:15px">qwen3-32b-instruct</h3><span id="dep-pill">${pill("live", "Deploying")}</span><div class="right"><button class="btn sm" id="replay">Replay</button></div></div>
+      <div class="card-body"><ol class="steps" id="steps"></ol><div class="section-title" style="margin-top:4px">Live log</div><div class="log" id="log" aria-live="polite"></div></div></div>
+    <div class="stack">
+      <div class="card"><div class="card-head"><h3>Use it</h3><div class="right"><button class="btn sm">${icon("i-play")}Try in playground</button></div></div><div class="card-body">
+        <dl class="kv"><dt>Base URL</dt><dd>${copyable("https://gateway.lab.internal/v1")}</dd><dt>Model</dt><dd>${copyable("qwen3-32b-instruct")}</dd><dt>Protocols</dt><dd><span class="tag">OpenAI Chat</span> <span class="tag">Responses</span> <span class="tag">Anthropic Messages</span></dd><dt>Access</dt><dd>Research Lab · 12 members</dd></dl>
+        <div class="section-title">Works with any OpenAI client</div>
+        <div class="code"><span class="copy-abs"><span class="copy"><button data-copy='curl https://gateway.lab.internal/v1/chat/completions -H "Authorization: Bearer $OWNSOLID_KEY" -d &apos;{"model": "qwen3-32b-instruct", "messages": [{"role": "user", "content": "Hello"}]}&apos;' title="Copy">${icon("i-copy")}</button></span></span>curl https://gateway.lab.internal/v1/chat/completions \\
+  -H "Authorization: Bearer $OWNSOLID_KEY" \\
+  -d '{"model": "qwen3-32b-instruct",
+       "messages": [{"role": "user", "content": "Hello"}]}'</div>
+        <p class="subtle" style="font-size:12.5px;margin:10px 0 0">No key yet? <a class="link" data-action="key">Create one scoped to this model</a></p>
+      </div></div>
+      <div class="card"><div class="card-head"><h3>Placement</h3><span class="sub">Chosen automatically</span></div><div class="card-body">
+        <dl class="kv"><dt>Node</dt><dd>gpu-a02 · cards 3 and 4</dd><dt>Engine</dt><dd>vLLM 0.31 · bundled image, signed</dd><dt>Weights</dt><dd>Qwen3-32B · BF16 · 65.5 GB · verified</dd><dt>Network</dt><dd>${pill("good", "No outbound access")}</dd></dl>
+      </div></div>
+    </div>
+  </div>
+  <p class="foot-note">Prototype with sample data. The deployment replays a recorded run.</p>`;
+}
+const STEPS = [
+  ["Verify model files", "65.5 GB from the local library, checksums match", "3 s"],
+  ["Reserve accelerators", "gpu-a02 cards 3 and 4, exclusive lease", "1 s"],
+  ["Start engine", "vLLM 0.31 from the bundled image, no registry pull", "6 s"],
+  ["Load weights", "Tensor parallel across 2 cards", "48 s"],
+  ["Health check", "Generate a test completion", "1 s"],
+  ["Publish to gateway", "Alias available to Research Lab", "< 1 s"],
+];
+const LOGS = [
+  [0, "Deployment dep-7f3a requested by passion (workspace: research-lab)"],
+  [0, "Model library: Qwen3-32B revision 9c1f2e4, 17 files, 65.5 GB"],
+  [0, "Checksum verification passed (17/17)", "ok"],
+  [1, "Lease granted on gpu-a02: GPU 3 (H20 96 GB), GPU 4 (H20 96 GB)"],
+  [2, "Image ownsolid/vllm:0.31.0 found in bundle, signature valid", "ok"],
+  [2, "Container started with network=none, read-only model mount"],
+  [3, "Loading safetensors shards 1/14 ... 14/14"],
+  [3, "KV cache: 38.2 GiB per card, max context 32768"],
+  [3, "CUDA graphs captured in 41.6 s"],
+  [4, "Test completion returned 24 tokens in 0.31 s", "ok"],
+  [5, "Gateway route qwen3-32b-instruct -> dep-7f3a published", "ok"],
+  [5, "Service ready. 12 members of research-lab can call it now.", "ok"],
+];
+let deployTimer = null;
+function mountDeployment() {
+  const run = () => {
+    clearInterval(deployTimer);
+    $("#log").replaceChildren();
+    let k = 0;
+    paintSteps(0, 0);
+    $("#dep-pill").innerHTML = pill("live", "Deploying");
+    $("#row-status").innerHTML = pill("live", "Deploying"); $("#row-replicas").textContent = "0 / 1";
+    deployTimer = setInterval(() => {
+      if (!$("#log")) { clearInterval(deployTimer); return; }
+      if (k >= LOGS.length) {
+        clearInterval(deployTimer); paintSteps(STEPS.length, 100);
+        $("#dep-pill").innerHTML = pill("good", "Ready");
+        $("#row-status").innerHTML = pill("good", "Ready"); $("#row-replicas").textContent = "1 / 1"; return;
+      }
+      const [s, text, cls] = LOGS[k++];
+      const line = document.createElement("div");
+      const t = document.createElement("span"); t.className = "t"; t.textContent = "14:41:" + String(2 + k * 4).padStart(2, "0");
+      const m = document.createElement("span"); if (cls) m.className = cls; m.textContent = text;
+      line.append(t, m); $("#log").append(line); $("#log").scrollTop = 1e6;
+      paintSteps(s, s === 3 ? Math.min(100, (k - 6) * 33) : 0);
+    }, 650);
+  };
+  $("#replay").addEventListener("click", run);
+  run();
+}
+function paintSteps(active, pct) {
+  $("#steps").innerHTML = STEPS.map(([t, d, time], i) => {
+    const state = i < active ? "done" : i === active ? "active" : "";
+    return `<li class="step ${state}"><div class="step-dot">${i < active ? icon("i-check") : i + 1}</div><div><div class="step-title">${t}</div><div class="step-desc">${d}</div>${i === active && i === 3 ? `<div class="progress"><b style="width:${pct}%"></b></div>` : ""}</div><div class="step-time">${i < active ? time : i === active ? "running" : ""}</div></li>`;
+  }).join("");
+}
+
+/* ---------- App catalog ---------- */
+let installed = false;
+function viewCatalog() {
+  return `
+  <div class="page-head"><div><h1>App catalog</h1><p>Install applications from the offline bundle. Apps use platform models, sign-in and monitoring automatically.</p></div>
+    <div class="actions"><div class="segmented" id="cat-tabs"><button class="on" data-t="catalog">Catalog</button><button data-t="installed">Installed</button></div></div></div>
+  <div id="cat-body"></div>
+  <p class="foot-note">Prototype with sample data.</p>`;
+}
+function catalogGrid() {
+  return `<div class="apps">
+    <div class="card featured"><div class="left"><div style="display:flex;gap:12px;align-items:center"><div class="app-logo" style="background:#1d4e89">DP</div><span class="tag accent">Partner app</span></div>
+      <h3>DeepParser</h3><p class="muted" style="margin:0">Enterprise knowledge engine with multimodal document parsing. Runs on ownsolid models, signs users in with ownsolid and reports status and logs to this console.</p>
+      <div class="app-foot" style="margin-top:4px"><span class="tag">Knowledge</span><span class="tag">v1.0.0</span><span class="tag">amd64 · arm64</span><button class="btn primary" id="install-dp">${installed ? "Open" : "Install"}</button></div></div>
+      <div class="right"><div class="section-title" style="margin:0 0 4px">Connected automatically on install</div>
+        <div class="bind">${icon("i-rocket")}Chat and embedding models from the gateway</div>
+        <div class="bind">${icon("i-key")}Scoped gateway key, created and rotated for you</div>
+        <div class="bind">${icon("i-lock")}Single sign-on with ownsolid accounts and roles</div>
+        <div class="bind">${icon("i-activity")}Health, logs and usage in this console</div></div></div>
+    ${APPS.map(a => `<div class="card app"><div class="app-top"><div class="app-logo" style="background:${a.color}">${a.name.slice(0, 2)}</div><div><h4>${a.name}</h4><span class="subtle" style="font-size:12.5px">${a.tag} · ${a.ver}</span></div></div><p>${a.desc}</p><div class="app-foot"><span class="tag">Offline bundle</span><button class="btn sm">Install</button></div></div>`).join("")}
+  </div>`;
+}
+function installedView() {
+  if (!installed) return `<div class="card empty"><div class="ei">${icon("i-store")}</div><h3>No apps installed yet</h3><p>Apps from the catalog install in about a minute and are connected to your models, sign-in and monitoring automatically.</p><button class="btn primary" id="empty-install">Install DeepParser</button></div>`;
+  return `<div class="grid g-2">
+    <div class="card"><div class="card-head"><div class="app-logo" style="background:#1d4e89;width:36px;height:36px;font-size:14px;border-radius:10px">DP</div><div><h3>DeepParser</h3><span class="sub">v1.0.0 · cpu-s01 · installed just now</span></div><div class="right" style="display:flex;gap:8px;align-items:center">${pill("good", "Running")}<button class="btn sm primary">Open app</button></div></div>
+      <div class="card-body">
+        <div class="assure" style="grid-template-columns:repeat(3,1fr);border:1px solid var(--border);border-radius:var(--radius-m)">
+          <div><b><span class="check">${icon("i-check")}</span>Healthy</b><small>/healthz 200 · 18 ms</small></div>
+          <div><b><span class="check">${icon("i-check")}</span>Sign-in connected</b><small>OIDC client dp-research-lab</small></div>
+          <div><b><span class="check">${icon("i-check")}</span>No outbound access</b><small>Network policy applied</small></div></div>
+        <div class="section-title">Logs</div>
+        <div class="log" style="height:230px">${["[api] Listening on :8080", "[auth] OIDC issuer https://console.lab.internal verified", "[models] chat=deepseek-v3-chat embedding=bge-m3-embed via gateway", "[parser] Worker pool started, 8 workers", "[parser] contract-2026-0912.pdf parsed: 46 pages, 12 tables, 9 figures", "[index] 1,284 chunks embedded with bge-m3-embed", "[qa] Answer served with 4 citations in 1.9 s"].map((l, i) => `<div><span class="t">14:5${i}:0${i}</span><span class="${i === 1 || i === 6 ? "ok" : ""}">${l}</span></div>`).join("")}</div>
+      </div></div>
+    <div class="stack">
+      <div class="card"><div class="card-head"><h3>Models in use</h3><span class="sub">Today</span></div><div class="card-body">
+        <div class="hbar"><span class="name mono">deepseek-v3-chat</span><div><div class="fill" style="width:100%"></div></div><span class="val num">2,090</span></div>
+        <div class="hbar"><span class="name mono">bge-m3-embed</span><div><div class="fill" style="width:62%"></div></div><span class="val num">1,296</span></div>
+        <p class="subtle" style="font-size:12.5px;margin:10px 0 0">Budget: 3,386 of 50,000 requests today. <a class="link">Change budget</a></p></div></div>
+      <div class="card"><div class="card-head"><h3>Access</h3></div><div class="card-body">
+        <dl class="kv"><dt>URL</dt><dd>${copyable("https://deepparser.lab.internal")}</dd><dt>Workspace</dt><dd>Research Lab</dd><dt>Roles</dt><dd>Owner and member → editor<br>Viewer → reader</dd></dl>
+        <div style="display:flex;gap:8px;margin-top:14px"><button class="btn sm">Upgrade</button><button class="btn sm">Back up now</button><button class="btn sm ghost danger">Uninstall</button></div></div></div>
+    </div></div>`;
+}
+function mountCatalog(tab = "catalog") {
+  const paint = t => {
+    $$("#cat-tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+    $("#cat-body").innerHTML = t === "catalog" ? catalogGrid() : installedView();
+    $("#install-dp")?.addEventListener("click", () => installed ? paint("installed") : openInstall());
+    $("#empty-install")?.addEventListener("click", () => openInstall());
+  };
+  $("#cat-tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) paint(b.dataset.t); });
+  paint(tab);
+}
+function openInstall() {
+  $("#modal").innerHTML = `
+    <div class="modal-head"><div class="app-logo" style="background:#1d4e89;width:40px;height:40px;font-size:15px">DP</div><div><h2>Install DeepParser</h2><div class="subtle" style="font-size:13px">Version 1.0.0 · from offline bundle 2026.11</div></div><button class="icon-btn" data-close style="margin-left:auto">${icon("i-x")}</button></div>
+    <div class="modal-body">
+      <div class="recommend" style="margin-top:6px">${icon("i-wand")}<div><b>Ready to install with recommended settings</b><small>cpu-s01 · deepseek-v3-chat · bge-m3-embed · sign-in on · 50,000 requests per day</small></div></div>
+      <details class="advanced"><summary>Review or change settings</summary>
+        <div class="form-row"><label>Workspace</label><select class="field"><option>Research Lab</option><option>Customer Service</option></select></div>
+        <div class="form-row"><label>Node</label><select class="field"><option>cpu-s01 · 23% CPU · 38% memory (recommended)</option><option>cpu-s02 · 31% CPU · 44% memory</option></select></div>
+        <div class="form-row"><label>Chat model</label><select class="field"><option>deepseek-v3-chat</option><option>qwen3-32b-instruct</option></select></div>
+        <div class="form-row"><label>Embedding model</label><select class="field"><option>bge-m3-embed</option></select></div>
+        <div class="form-row"><label>Daily request budget</label><div class="field"><input value="50000"></div></div>
+        <div class="form-row"><label>Single sign-on</label><button class="switch" aria-pressed="true" onclick="this.classList.toggle('off')"></button><div class="hint">Users sign in with their ownsolid account. Workspace roles map to DeepParser roles.</div></div>
+      </details>
+      <div class="notice">${icon("i-key")}<span>A gateway key scoped to these models and this workspace is created, injected and rotated for you. No secret is shown or stored in plain text.</span></div>
+      <div class="notice">${icon("i-offline")}<span>All images come from the signed offline bundle. The app runs with outbound network access blocked.</span></div>
+    </div>
+    <div class="modal-foot"><span class="left">About 1 minute</span><button class="btn" data-close>Cancel</button><button class="btn primary" id="do-install">Install<kbd>&#8984;&#8629;</kbd></button></div>`;
+  openLayer("#modal");
+  $("#do-install").addEventListener("click", e => {
+    e.currentTarget.textContent = "Installing..."; e.currentTarget.disabled = true;
+    setTimeout(() => { installed = true; closeAll(); if (location.hash.startsWith("#catalog")) mountCatalog("installed"); else location.hash = "catalog/installed"; toast("DeepParser installed and connected"); }, 1100);
+  });
+}
+
+/* ---------- Layers, command menu, shortcuts ---------- */
+function openLayer(sel) { $("#scrim").classList.add("open"); $(sel).classList.add("open"); }
+function closeAll() { ["#scrim", "#drawer", "#modal", "#palette"].forEach(s => $(s).classList.remove("open")); }
+function runAction(a) {
+  closeAll();
+  if (a === "deploy") setTimeout(openDeploy, 10);
+  if (a === "install") { location.hash = "catalog"; setTimeout(openInstall, 60); }
+  if (a === "node") toast("Copy the enrollment command from Nodes, then run it on the host");
+  if (a === "key") toast("API key dialog is not part of this prototype");
+}
+document.addEventListener("click", e => {
+  if (e.target.closest("[data-close]") || e.target.id === "scrim") closeAll();
+  const act = e.target.closest("[data-action]"); if (act) runAction(act.dataset.action);
+  const go = e.target.closest("[data-goto]"); if (go) location.hash = go.dataset.goto;
+  const t = e.target.closest("[data-toast]"); if (t) { e.stopPropagation(); toast(t.dataset.toast); }
+});
+const ACTIONS = [
+  { label: "Deploy a model", ic: "i-rocket", kind: "Action", run: () => runAction("deploy"), keys: "D" },
+  { label: "Install an app", ic: "i-store", kind: "Action", run: () => runAction("install"), keys: "I" },
+  { label: "Add a node", ic: "i-server", kind: "Action", run: () => runAction("node"), keys: "N" },
+  { label: "Create an API key", ic: "i-key", kind: "Action", run: () => runAction("key"), keys: "K" },
+  { label: "Toggle dark theme", ic: "i-moon", kind: "Action", run: () => $("#theme").click() },
+];
+const TARGETS = NAV.flatMap(g => g.items.filter(i => BUILT.has(i[0])).map(i => ({ label: i[1], ic: i[2], kind: "Page", run: () => { location.hash = i[0]; } })))
+  .concat(NODES.map(n => ({ label: n.name, ic: "i-server", kind: "Node", run: () => { location.hash = "nodes/" + n.name; } })),
+          SERVICES.map(s => ({ label: s.name, ic: "i-rocket", kind: "Model service", run: () => { location.hash = "models"; } })),
+          [{ label: "DeepParser", ic: "i-store", kind: "App", run: () => { location.hash = "catalog"; } }]);
+let palIndex = 0, palItems = [];
+function paintPalette() {
+  const q = $("#palette-input").value.toLowerCase().trim();
+  const acts = ACTIONS.filter(a => a.label.toLowerCase().includes(q));
+  const targets = TARGETS.filter(t => t.label.toLowerCase().includes(q)).slice(0, q ? 8 : 5);
+  palItems = [...acts, ...targets];
+  palIndex = Math.min(palIndex, Math.max(0, palItems.length - 1));
+  let i = -1;
+  const row = it => { i++; return `<div class="result ${i === palIndex ? "on" : ""}" data-i="${i}">${icon(it.ic)}<span>${it.label}</span><span class="subtle" style="margin-left:auto;font-size:12px">${it.keys ? `<kbd>${it.keys}</kbd>` : it.kind}</span></div>`; };
+  $("#palette-results").innerHTML = (acts.length ? `<div class="group">Actions</div>${acts.map(row).join("")}` : "") + (targets.length ? `<div class="group">Go to</div>${targets.map(row).join("")}` : "") || `<div class="result subtle">No results for "${$("#palette-input").value.replace(/</g, "&lt;")}"</div>`;
+}
+function openPalette() { openLayer("#palette"); $("#palette-input").value = ""; palIndex = 0; paintPalette(); setTimeout(() => $("#palette-input").focus(), 30); }
+$("#open-palette").addEventListener("click", openPalette);
+$("#palette-input").addEventListener("input", () => { palIndex = 0; paintPalette(); });
+$("#palette-results").addEventListener("click", e => { const r = e.target.closest("[data-i]"); if (r) { closeAll(); palItems[+r.dataset.i].run(); } });
+document.addEventListener("keydown", e => {
+  const typing = ["INPUT", "SELECT", "TEXTAREA"].includes(document.activeElement?.tagName);
+  const layerOpen = $("#modal").classList.contains("open") || $("#palette").classList.contains("open");
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); openPalette(); return; }
+  if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && $("#modal").classList.contains("open")) { $("#do-deploy, #do-install")?.click(); return; }
+  if (e.key === "Escape") { closeAll(); return; }
+  if ($("#palette").classList.contains("open") && ["ArrowDown", "ArrowUp", "Enter"].includes(e.key)) {
+    e.preventDefault();
+    if (e.key === "ArrowDown") palIndex = Math.min(palItems.length - 1, palIndex + 1);
+    if (e.key === "ArrowUp") palIndex = Math.max(0, palIndex - 1);
+    if (e.key === "Enter" && palItems[palIndex]) { const it = palItems[palIndex]; closeAll(); it.run(); return; }
+    paintPalette(); return;
+  }
+  if (typing || layerOpen || e.metaKey || e.ctrlKey || e.altKey) return;
+  const map = { d: "deploy", i: "install", n: "node", k: "key" };
+  if (map[e.key]) { e.preventDefault(); runAction(map[e.key]); }
+  if (e.key === "/" && $("#node-q")) { e.preventDefault(); $("#node-q").focus(); }
+});
+$("#theme").addEventListener("click", () => {
+  const dark = document.documentElement.dataset.theme !== "dark";
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  $("#theme").innerHTML = icon(dark ? "i-sun" : "i-moon");
+});
+$("#density").addEventListener("click", () => { const d = document.documentElement.dataset; d.density = d.density === "compact" ? "comfortable" : "compact"; });
+const params = new URLSearchParams(location.search);
+if (params.get("theme") === "dark") { document.documentElement.dataset.theme = "dark"; $("#theme").innerHTML = icon("i-sun"); }
+let resizeTimer = null;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { const el = $("#line-chart"); if (!el) return; el.querySelector("svg")?.remove(); mountLineChart(); }, 120); });
+window.addEventListener("hashchange", route);
+route();
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+CREATE TABLE workflow_versions (
+ id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL PRIMARY KEY,
+ tenant_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ workspace_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ workflow_id CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ version_number INTEGER NOT NULL CHECK(version_number>0),
+ draft_revision BIGINT NOT NULL CHECK(draft_revision BETWEEN 1 AND 9007199254740991),
+ graph JSON NOT NULL CHECK(JSON_TYPE(graph)='OBJECT' AND OCTET_LENGTH(CAST(graph AS CHAR CHARACTER SET utf8mb4))<=1048576),
+ graph_sha256 VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL CHECK(REGEXP_LIKE(graph_sha256,'^[a-f0-9]{64}$','c')),
+ published_by CHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+ published_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+ UNIQUE(tenant_id,workspace_id,workflow_id,id),
+ UNIQUE(tenant_id,workspace_id,workflow_id,version_number),
+ FOREIGN KEY(published_by) REFERENCES users(id),
+ FOREIGN KEY(tenant_id,workspace_id,workflow_id) REFERENCES workflows(tenant_id,workspace_id,id),
+ CONSTRAINT workflow_versions_id_canonical CHECK(REGEXP_LIKE(id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT workflow_versions_tenant_id_canonical CHECK(REGEXP_LIKE(tenant_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT workflow_versions_workspace_id_canonical CHECK(REGEXP_LIKE(workspace_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT workflow_versions_workflow_id_canonical CHECK(REGEXP_LIKE(workflow_id,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c')),
+ CONSTRAINT workflow_versions_published_by_canonical CHECK(REGEXP_LIKE(published_by,'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$','c'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin;

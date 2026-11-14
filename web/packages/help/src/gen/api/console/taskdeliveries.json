@@ -1,0 +1,662 @@
+{
+ "title": "Task delivery transport initial path",
+ "operations": [
+  {
+   "id": "adminListTaskDeliveries",
+   "method": "get",
+   "path": "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "DeliveryPage"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminReadTaskDelivery",
+   "method": "get",
+   "path": "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "event_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "Delivery"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminReadTaskDeadLetters",
+   "method": "get",
+   "path": "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}/dead-letters",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "event_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "DeadLetterPage"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminRetryTaskDelivery",
+   "method": "post",
+   "path": "/sites/{site_id}/cells/{cell_id}/admin/nodes/{node_id}/task-deliveries/{event_id}/retry",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "node_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "workspace_id",
+     "in": "query",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    },
+    {
+     "name": "event_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string",
+      "format": "uuid"
+     }
+    }
+   ],
+   "body": {
+    "$ref": "RetryRequest"
+   },
+   "responses": [
+    {
+     "status": "202",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "RetryReceipt"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  },
+  {
+   "id": "adminReadTaskDeliveryQuarantine",
+   "method": "get",
+   "path": "/sites/{site_id}/cells/{cell_id}/admin/task-delivery-quarantine",
+   "parameters": [
+    {
+     "name": "site_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "cell_id",
+     "in": "path",
+     "required": true,
+     "schema": {
+      "type": "string"
+     }
+    },
+    {
+     "name": "limit",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+     }
+    },
+    {
+     "name": "cursor",
+     "in": "query",
+     "required": false,
+     "schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+     }
+    }
+   ],
+   "body": null,
+   "responses": [
+    {
+     "status": "200",
+     "schema": {
+      "type": "object",
+      "required": [
+       "data"
+      ],
+      "properties": {
+       "data": {
+        "$ref": "QuarantinePage"
+       }
+      }
+     }
+    }
+   ],
+   "errors": {}
+  }
+ ],
+ "schemas": {
+  "DeadLetter": {
+   "type": "object",
+   "required": [
+    "id",
+    "event_id",
+    "generation",
+    "kind",
+    "outcome_unknown",
+    "error_code",
+    "created_at",
+    "retried_at",
+    "next_generation"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "event_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "generation": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "kind": {
+     "enum": [
+      "publish",
+      "consume",
+      "expiry"
+     ]
+    },
+    "outcome_unknown": {
+     "type": "boolean"
+    },
+    "error_code": {
+     "type": "string"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "retried_at": {
+     "type": [
+      "string",
+      "null"
+     ],
+     "format": "date-time"
+    },
+    "next_generation": {
+     "type": [
+      "integer",
+      "null"
+     ],
+     "minimum": 2
+    }
+   }
+  },
+  "DeadLetterPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "DeadLetter"
+     }
+    },
+    "next_cursor": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   }
+  },
+  "Delivery": {
+   "type": "object",
+   "required": [
+    "id",
+    "workspace_id",
+    "node_id",
+    "task_id",
+    "operation",
+    "task_state",
+    "state",
+    "outcome_unknown",
+    "can_retry",
+    "generation",
+    "publish_attempts",
+    "consume_attempts",
+    "error_code",
+    "created_at",
+    "updated_at",
+    "expires_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "workspace_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "node_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "task_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "operation": {
+     "type": "string"
+    },
+    "task_state": {
+     "enum": [
+      "pending",
+      "running",
+      "succeeded",
+      "failed",
+      "cancelled"
+     ]
+    },
+    "state": {
+     "enum": [
+      "prepared",
+      "sent",
+      "published",
+      "received",
+      "obsolete",
+      "dead"
+     ]
+    },
+    "outcome_unknown": {
+     "type": "boolean"
+    },
+    "can_retry": {
+     "type": "boolean"
+    },
+    "generation": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "publish_attempts": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "consume_attempts": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "error_code": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "updated_at": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "expires_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "DeliveryPage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "Delivery"
+     }
+    },
+    "next_cursor": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   }
+  },
+  "Quarantine": {
+   "type": "object",
+   "required": [
+    "id",
+    "error_code",
+    "created_at"
+   ],
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "error_code": {
+     "type": "string"
+    },
+    "created_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "QuarantinePage": {
+   "type": "object",
+   "required": [
+    "items",
+    "next_cursor"
+   ],
+   "properties": {
+    "items": {
+     "type": "array",
+     "maxItems": 100,
+     "items": {
+      "$ref": "Quarantine"
+     }
+    },
+    "next_cursor": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   }
+  },
+  "RetryReceipt": {
+   "type": "object",
+   "required": [
+    "event_id",
+    "delivery_id",
+    "generation",
+    "requested_at"
+   ],
+   "properties": {
+    "event_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "delivery_id": {
+     "type": "string",
+     "format": "uuid"
+    },
+    "generation": {
+     "type": "integer",
+     "minimum": 2
+    },
+    "requested_at": {
+     "type": "string",
+     "format": "date-time"
+    }
+   }
+  },
+  "RetryRequest": {
+   "type": "object",
+   "required": [
+    "generation",
+    "reason"
+   ],
+   "properties": {
+    "generation": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 2147483646
+    },
+    "reason": {
+     "type": "string",
+     "minLength": 1,
+     "maxLength": 500
+    }
+   }
+  }
+ }
+}

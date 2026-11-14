@@ -1,0 +1,7 @@
+# Purpose/owner: isolated damengbackup native client configuration.
+# Install as inventory.service_configuration.path, named dm_svc.conf, inside an
+# existing operator-owned 0700 directory; use mode 0600 and record its exact hash.
+# The native environment sets DM_SVC_PATH to this directory. Only blank lines and
+# comments are accepted, matching the existing local connector profile. No alias,
+# wallet, autologin, credential, server address, failover or policy override belongs
+# here. The per-operation CONFIG_FILE supplies the sole explicit UNIXSOCKET input.

@@ -1,0 +1,151 @@
+{
+  "format": "projectone.mysql.schema-reference.v1",
+  "version": "8.4.12",
+  "scope": "account_workspace_schema_only_product_pending",
+  "journal": {
+    "step": 0,
+    "file": "journal.sql",
+    "source_sha256": "260115bbbd15402a6be03b06a51527c9a7d22f42df646123c3a5856c65617f95",
+    "object": "schema_migrations",
+    "kind": "create_table",
+    "definition_sha256": "8ccf61238c2aa21ea9a184213720056ede2025bd9bb5b700755050097cfb4c65",
+    "definition": "CREATE TABLE `schema_migrations` (\n  `step` int NOT NULL,\n  `source_sha256` char(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `object_name` varchar(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `object_sha256` char(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `state` varchar(8) COLLATE utf8mb4_0900_bin NOT NULL,\n  `started_at` datetime(6) NOT NULL,\n  `applied_at` datetime(6) DEFAULT NULL,\n  PRIMARY KEY (`step`),\n  CONSTRAINT `schema_migrations_chk_1` CHECK ((`step` >= 1)),\n  CONSTRAINT `schema_migrations_chk_2` CHECK ((`state` in (_utf8mb4'applying',_utf8mb4'applied'))),\n  CONSTRAINT `schema_migrations_chk_3` CHECK (((`state` = _utf8mb4'applied') = (`applied_at` is not null))),\n  CONSTRAINT `schema_migrations_chk_4` CHECK (regexp_like(`source_sha256`,_utf8mb4'^[a-f0-9]{64}$',_utf8mb4'c')),\n  CONSTRAINT `schema_migrations_chk_5` CHECK (regexp_like(`object_sha256`,_utf8mb4'^[a-f0-9]{64}$',_utf8mb4'c'))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+  },
+  "steps": [
+    {
+      "step": 1,
+      "file": "000001_tenants.sql",
+      "source_sha256": "b056bec6f5c9dbf9fcc7a3e6cd6b4aaf054d3739a5bd56388f2a4498b5c1274e",
+      "object": "tenants",
+      "kind": "create_table",
+      "definition_sha256": "aa89911c8faaa068e8bd6d0840eaf672cfb15d19880fbab90876386e38da2795",
+      "definition": "CREATE TABLE `tenants` (\n  `id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `name` varchar(100) COLLATE utf8mb4_0900_bin NOT NULL,\n  `status` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n  PRIMARY KEY (`id`),\n  CONSTRAINT `tenants_chk_1` CHECK ((`status` in (_utf8mb4'active',_utf8mb4'disabled'))),\n  CONSTRAINT `tenants_id_canonical` CHECK (regexp_like(`id`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c'))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 2,
+      "file": "000002_workspaces.sql",
+      "source_sha256": "ac9e353162f8e723d35a7931d9c25ae442aa2c94d160c71c45bcef2747325d4b",
+      "object": "workspaces",
+      "kind": "create_table",
+      "definition_sha256": "84056f54fdfcae789bc3ff468c8efa35c1c0175a91c8bc1aaf368814131aa28c",
+      "definition": "CREATE TABLE `workspaces` (\n  `id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `tenant_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `name` varchar(100) COLLATE utf8mb4_0900_bin NOT NULL,\n  `status` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `version` bigint NOT NULL DEFAULT '1',\n  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `workspaces_tenant_id` (`tenant_id`,`id`),\n  UNIQUE KEY `workspaces_tenant_name` (`tenant_id`,`name`),\n  CONSTRAINT `workspaces_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`),\n  CONSTRAINT `workspaces_chk_1` CHECK ((`status` in (_utf8mb4'active',_utf8mb4'disabled'))),\n  CONSTRAINT `workspaces_chk_2` CHECK ((`version` between 1 and 9007199254740991)),\n  CONSTRAINT `workspaces_id_canonical` CHECK (regexp_like(`id`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c'))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 3,
+      "file": "000003_users.sql",
+      "source_sha256": "b592404512b467fdabd646cc8c15e5c26e23b42f79bcbb7c7c79f558e8e01daf",
+      "object": "users",
+      "kind": "create_table",
+      "definition_sha256": "b27bb735ace2de949dfbbd2bc999d5ffade57878e912e83980ba27522618d841",
+      "definition": "CREATE TABLE `users` (\n  `id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `email_canonical` varchar(254) COLLATE utf8mb4_0900_bin NOT NULL,\n  `email_display` varchar(254) COLLATE utf8mb4_0900_bin NOT NULL,\n  `display_name` varchar(100) COLLATE utf8mb4_0900_bin NOT NULL,\n  `locale` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `status` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `is_platform_admin` tinyint(1) NOT NULL DEFAULT '0',\n  `email_verified_at` datetime(6) DEFAULT NULL,\n  `auth_epoch` bigint NOT NULL DEFAULT '1',\n  `version` bigint NOT NULL DEFAULT '1',\n  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `email_canonical` (`email_canonical`),\n  KEY `users_list_idx` (`created_at` DESC,`id` DESC),\n  KEY `users_status_list_idx` (`status`,`created_at` DESC,`id` DESC),\n  CONSTRAINT `users_chk_1` CHECK ((`locale` in (_utf8mb4'en',_utf8mb4'zh-CN'))),\n  CONSTRAINT `users_chk_2` CHECK ((`status` in (_utf8mb4'active',_utf8mb4'disabled'))),\n  CONSTRAINT `users_chk_3` CHECK ((`is_platform_admin` in (0,1))),\n  CONSTRAINT `users_chk_4` CHECK ((`auth_epoch` between 1 and 9007199254740991)),\n  CONSTRAINT `users_chk_5` CHECK ((`version` between 1 and 9007199254740991)),\n  CONSTRAINT `users_chk_6` CHECK ((`email_canonical` = lower(`email_canonical`))),\n  CONSTRAINT `users_id_canonical` CHECK (regexp_like(`id`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c'))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 4,
+      "file": "000004_password_credentials.sql",
+      "source_sha256": "812b322c867d1be4818e2b941b627d577b2a7c42389a5f17aaa216194dffea96",
+      "object": "password_credentials",
+      "kind": "create_table",
+      "definition_sha256": "c03140c65f0dc93966a56476918022ff3c24baea7ea0e1ae937f271daabf88b3",
+      "definition": "CREATE TABLE `password_credentials` (\n  `user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `password_phc` varchar(512) COLLATE utf8mb4_0900_bin NOT NULL,\n  `version` bigint NOT NULL DEFAULT '1',\n  `changed_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n  PRIMARY KEY (`user_id`),\n  CONSTRAINT `password_credentials_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),\n  CONSTRAINT `password_credentials_chk_1` CHECK ((`version` between 1 and 9007199254740991))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 5,
+      "file": "000005_workspace_memberships.sql",
+      "source_sha256": "291c25ec688a304d27ed218fcfb0dc3dedcb75f9dac4f47015bb03bd0d66f8cb",
+      "object": "workspace_memberships",
+      "kind": "create_table",
+      "definition_sha256": "928de861d206ec04b1873e3d2f6129a0417d92f2f313dc519d4d4ac327e3ae33",
+      "definition": "CREATE TABLE `workspace_memberships` (\n  `user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `tenant_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `workspace_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `role` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `version` bigint NOT NULL DEFAULT '1',\n  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n  PRIMARY KEY (`user_id`,`workspace_id`),\n  KEY `memberships_scope_idx` (`tenant_id`,`workspace_id`,`user_id`),\n  CONSTRAINT `workspace_memberships_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),\n  CONSTRAINT `workspace_memberships_ibfk_2` FOREIGN KEY (`tenant_id`, `workspace_id`) REFERENCES `workspaces` (`tenant_id`, `id`),\n  CONSTRAINT `workspace_memberships_chk_1` CHECK ((`role` in (_utf8mb4'owner',_utf8mb4'member',_utf8mb4'viewer'))),\n  CONSTRAINT `workspace_memberships_chk_2` CHECK ((`version` between 1 and 9007199254740991))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 6,
+      "file": "000006_installation_state.sql",
+      "source_sha256": "3595182fdc8bf0f670c9b1eb75747590556aa70eac34e28e9a6008a5b5bd9937",
+      "object": "installation_state",
+      "kind": "create_table",
+      "definition_sha256": "aba05d71237558f043bf7f7c6d2a85e920ef7cbec0021ae32127d09c3e164476",
+      "definition": "CREATE TABLE `installation_state` (\n  `id` smallint NOT NULL,\n  `bootstrap_complete` tinyint(1) NOT NULL DEFAULT '0',\n  `tenant_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `default_workspace_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `primary_admin_user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `bootstrapped_at` datetime(6) DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  KEY `primary_admin_user_id` (`primary_admin_user_id`),\n  KEY `tenant_id` (`tenant_id`,`default_workspace_id`),\n  CONSTRAINT `installation_state_ibfk_1` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`),\n  CONSTRAINT `installation_state_ibfk_2` FOREIGN KEY (`primary_admin_user_id`) REFERENCES `users` (`id`),\n  CONSTRAINT `installation_state_ibfk_3` FOREIGN KEY (`tenant_id`, `default_workspace_id`) REFERENCES `workspaces` (`tenant_id`, `id`),\n  CONSTRAINT `installation_state_chk_1` CHECK ((`id` = 1)),\n  CONSTRAINT `installation_state_chk_2` CHECK ((`bootstrap_complete` in (0,1))),\n  CONSTRAINT `installation_state_chk_3` CHECK ((((`bootstrap_complete` = 1) and (`tenant_id` is not null) and (`default_workspace_id` is not null) and (`primary_admin_user_id` is not null) and (`bootstrapped_at` is not null)) or ((`bootstrap_complete` = 0) and (`tenant_id` is null) and (`default_workspace_id` is null) and (`primary_admin_user_id` is null) and (`bootstrapped_at` is null))))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 7,
+      "file": "000007_sessions.sql",
+      "source_sha256": "ca2685c9e153ef415a2c0bc45b3fd4007f6eabb25ac6379cfb279d70ed01bab2",
+      "object": "sessions",
+      "kind": "create_table",
+      "definition_sha256": "2ddcbf3fdde74a398b5ee57e0cb06ce73749bb197ba394e0359174da38fc8e37",
+      "definition": "CREATE TABLE `sessions` (\n  `id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `audience` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `token_hash` varbinary(32) NOT NULL,\n  `auth_epoch` bigint NOT NULL,\n  `created_at` datetime(6) NOT NULL,\n  `last_seen_at` datetime(6) NOT NULL,\n  `absolute_expires_at` datetime(6) NOT NULL,\n  `revoked_at` datetime(6) DEFAULT NULL,\n  `revoke_reason` varchar(48) COLLATE utf8mb4_0900_bin DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `token_hash` (`token_hash`),\n  KEY `sessions_user_live_idx` (`user_id`,`revoked_at`),\n  KEY `sessions_expiry_idx` (`absolute_expires_at`),\n  CONSTRAINT `sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),\n  CONSTRAINT `sessions_chk_1` CHECK ((`audience` in (_utf8mb4'portal',_utf8mb4'admin'))),\n  CONSTRAINT `sessions_chk_2` CHECK ((length(`token_hash`) = 32)),\n  CONSTRAINT `sessions_chk_3` CHECK ((`auth_epoch` between 1 and 9007199254740991)),\n  CONSTRAINT `sessions_chk_4` CHECK ((`absolute_expires_at` > `created_at`)),\n  CONSTRAINT `sessions_chk_5` CHECK ((`last_seen_at` >= `created_at`)),\n  CONSTRAINT `sessions_chk_6` CHECK (((`revoked_at` is null) = (`revoke_reason` is null))),\n  CONSTRAINT `sessions_id_canonical` CHECK (regexp_like(`id`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c'))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 8,
+      "file": "000008_invitations.sql",
+      "source_sha256": "d5de146555b5d99b284a36c244932fedca9e68d4ca0bfed7e12363c9aa36f3ce",
+      "object": "invitations",
+      "kind": "create_table",
+      "definition_sha256": "8654da6c1588fe3e57b26799f2d8064f704f1021e22fa4ba3ce120ba9643c3de",
+      "definition": "CREATE TABLE `invitations` (\n  `id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `tenant_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `workspace_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `email_canonical` varchar(254) COLLATE utf8mb4_0900_bin NOT NULL,\n  `locale` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `role` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL DEFAULT 'member',\n  `status` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `token_hash` varbinary(32) DEFAULT NULL,\n  `token_generation` int NOT NULL DEFAULT '1',\n  `version` bigint NOT NULL DEFAULT '1',\n  `created_by` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `accepted_user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `created_at` datetime(6) NOT NULL,\n  `updated_at` datetime(6) NOT NULL,\n  `expires_at` datetime(6) NOT NULL,\n  `accepted_at` datetime(6) DEFAULT NULL,\n  `revoked_at` datetime(6) DEFAULT NULL,\n  `pending_email` varchar(254) COLLATE utf8mb4_0900_bin GENERATED ALWAYS AS ((case when (`status` = _utf8mb4'pending') then `email_canonical` else NULL end)) STORED,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `token_hash` (`token_hash`),\n  UNIQUE KEY `invitations_pending_email_idx` (`pending_email`),\n  KEY `invitations_list_idx` (`created_at` DESC,`id` DESC),\n  KEY `created_by` (`created_by`),\n  KEY `accepted_user_id` (`accepted_user_id`),\n  KEY `tenant_id` (`tenant_id`,`workspace_id`),\n  CONSTRAINT `invitations_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),\n  CONSTRAINT `invitations_ibfk_2` FOREIGN KEY (`accepted_user_id`) REFERENCES `users` (`id`),\n  CONSTRAINT `invitations_ibfk_3` FOREIGN KEY (`tenant_id`, `workspace_id`) REFERENCES `workspaces` (`tenant_id`, `id`),\n  CONSTRAINT `invitations_chk_1` CHECK ((`locale` in (_utf8mb4'en',_utf8mb4'zh-CN'))),\n  CONSTRAINT `invitations_chk_10` CHECK ((((`status` = _utf8mb4'accepted') and (`accepted_user_id` is not null) and (`accepted_at` is not null)) or ((`status` <> _utf8mb4'accepted') and (`accepted_user_id` is null) and (`accepted_at` is null)))),\n  CONSTRAINT `invitations_chk_11` CHECK (((`status` = _utf8mb4'revoked') = (`revoked_at` is not null))),\n  CONSTRAINT `invitations_chk_2` CHECK ((`role` = _utf8mb4'member')),\n  CONSTRAINT `invitations_chk_3` CHECK ((`status` in (_utf8mb4'pending',_utf8mb4'accepted',_utf8mb4'revoked',_utf8mb4'expired'))),\n  CONSTRAINT `invitations_chk_4` CHECK (((`token_hash` is null) or (length(`token_hash`) = 32))),\n  CONSTRAINT `invitations_chk_5` CHECK ((`token_generation` >= 1)),\n  CONSTRAINT `invitations_chk_6` CHECK ((`version` between 1 and 9007199254740991)),\n  CONSTRAINT `invitations_chk_7` CHECK ((`email_canonical` = lower(`email_canonical`))),\n  CONSTRAINT `invitations_chk_8` CHECK ((`expires_at` > `created_at`)),\n  CONSTRAINT `invitations_chk_9` CHECK (((`status` = _utf8mb4'pending') = (`token_hash` is not null))),\n  CONSTRAINT `invitations_id_canonical` CHECK (regexp_like(`id`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c'))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 9,
+      "file": "000009_password_reset_tokens.sql",
+      "source_sha256": "ac08cfc4465facbc31c567909eb7552fe3154754ee78766d35437288d30a514a",
+      "object": "password_reset_tokens",
+      "kind": "create_table",
+      "definition_sha256": "53abe918427f31fc028fca2be560512ce7580c9c18ac3fbc7501483507d15fcf",
+      "definition": "CREATE TABLE `password_reset_tokens` (\n  `id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `audience` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `token_hash` varbinary(32) DEFAULT NULL,\n  `created_at` datetime(6) NOT NULL,\n  `expires_at` datetime(6) NOT NULL,\n  `consumed_at` datetime(6) DEFAULT NULL,\n  `revoked_at` datetime(6) DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `reset_tokens_id_user` (`id`,`user_id`),\n  UNIQUE KEY `token_hash` (`token_hash`),\n  KEY `reset_tokens_user_live_idx` (`user_id`,`consumed_at`,`revoked_at`,`expires_at`),\n  CONSTRAINT `password_reset_tokens_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),\n  CONSTRAINT `password_reset_tokens_chk_1` CHECK ((`audience` in (_utf8mb4'portal',_utf8mb4'admin'))),\n  CONSTRAINT `password_reset_tokens_chk_2` CHECK (((`token_hash` is null) or (length(`token_hash`) = 32))),\n  CONSTRAINT `password_reset_tokens_chk_3` CHECK ((`expires_at` > `created_at`)),\n  CONSTRAINT `password_reset_tokens_chk_4` CHECK (((`consumed_at` is null) or (`revoked_at` is null))),\n  CONSTRAINT `password_reset_tokens_chk_5` CHECK ((((`consumed_at` is null) and (`revoked_at` is null)) = (`token_hash` is not null))),\n  CONSTRAINT `reset_tokens_id_canonical` CHECK (regexp_like(`id`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c'))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 10,
+      "file": "000010_mail_deliveries.sql",
+      "source_sha256": "87b443ee9643006574fbe571bac427c513adaa87b72f7755f11d92c7cd618ba8",
+      "object": "mail_deliveries",
+      "kind": "create_table",
+      "definition_sha256": "26cd71d8f9da54322e69b4825c8165a50db2b65ca2bb5e4d34ffe043e93a75e6",
+      "definition": "CREATE TABLE `mail_deliveries` (\n  `id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `purpose` varchar(24) COLLATE utf8mb4_0900_bin NOT NULL,\n  `recipient_email` varchar(254) COLLATE utf8mb4_0900_bin NOT NULL,\n  `locale` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `invitation_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `invitation_generation` int DEFAULT NULL,\n  `reset_token_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `state` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `payload_key_id` varchar(64) COLLATE utf8mb4_0900_bin DEFAULT NULL,\n  `payload_nonce` varbinary(12) DEFAULT NULL,\n  `payload_ciphertext` blob,\n  `payload_schema_version` int NOT NULL DEFAULT '1',\n  `attempt_count` int NOT NULL DEFAULT '0',\n  `next_attempt_at` datetime(6) NOT NULL,\n  `lease_token` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `locked_until` datetime(6) DEFAULT NULL,\n  `error_category` varchar(64) COLLATE utf8mb4_0900_bin DEFAULT NULL,\n  `message_id` varchar(254) COLLATE utf8mb4_0900_bin NOT NULL,\n  `created_at` datetime(6) NOT NULL,\n  `updated_at` datetime(6) NOT NULL,\n  `completed_at` datetime(6) DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  UNIQUE KEY `message_id` (`message_id`),\n  KEY `mail_claim_idx` (`state`,`next_attempt_at`),\n  KEY `mail_list_idx` (`created_at` DESC,`id` DESC),\n  KEY `invitation_id` (`invitation_id`),\n  KEY `user_id` (`user_id`),\n  KEY `reset_token_id` (`reset_token_id`,`user_id`),\n  CONSTRAINT `mail_deliveries_ibfk_1` FOREIGN KEY (`invitation_id`) REFERENCES `invitations` (`id`),\n  CONSTRAINT `mail_deliveries_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),\n  CONSTRAINT `mail_deliveries_ibfk_3` FOREIGN KEY (`reset_token_id`, `user_id`) REFERENCES `password_reset_tokens` (`id`, `user_id`),\n  CONSTRAINT `mail_deliveries_chk_1` CHECK ((`purpose` in (_utf8mb4'invitation',_utf8mb4'password_reset',_utf8mb4'password_changed'))),\n  CONSTRAINT `mail_deliveries_chk_2` CHECK ((`locale` in (_utf8mb4'en',_utf8mb4'zh-CN'))),\n  CONSTRAINT `mail_deliveries_chk_3` CHECK ((`state` in (_utf8mb4'queued',_utf8mb4'sending',_utf8mb4'sent',_utf8mb4'failed',_utf8mb4'cancelled'))),\n  CONSTRAINT `mail_deliveries_chk_4` CHECK ((`payload_schema_version` = 1)),\n  CONSTRAINT `mail_deliveries_chk_5` CHECK ((`attempt_count` between 0 and 5)),\n  CONSTRAINT `mail_deliveries_chk_6` CHECK ((((`purpose` = _utf8mb4'invitation') and (`invitation_id` is not null) and (`invitation_generation` is not null) and (`reset_token_id` is null) and (`user_id` is null)) or ((`purpose` = _utf8mb4'password_reset') and (`reset_token_id` is not null) and (`invitation_id` is null) and (`invitation_generation` is null) and (`user_id` is not null)) or ((`purpose` = _utf8mb4'password_changed') and (`user_id` is not null) and (`invitation_id` is null) and (`invitation_generation` is null) and (`reset_token_id` is null)))),\n  CONSTRAINT `mail_deliveries_chk_7` CHECK ((((`state` in (_utf8mb4'queued',_utf8mb4'sending')) and (`payload_key_id` is not null) and (`payload_nonce` is not null) and (length(`payload_nonce`) = 12) and (`payload_ciphertext` is not null) and (`completed_at` is null)) or ((`state` in (_utf8mb4'sent',_utf8mb4'failed',_utf8mb4'cancelled')) and (`payload_key_id` is null) and (`payload_nonce` is null) and (`payload_ciphertext` is null) and (`completed_at` is not null)))),\n  CONSTRAINT `mail_deliveries_chk_8` CHECK ((((`state` = _utf8mb4'sending') and (`lease_token` is not null) and (`locked_until` is not null)) or ((`state` <> _utf8mb4'sending') and (`lease_token` is null) and (`locked_until` is null)))),\n  CONSTRAINT `mail_deliveries_id_canonical` CHECK (regexp_like(`id`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c')),\n  CONSTRAINT `mail_lease_canonical` CHECK (((`lease_token` is null) or regexp_like(`lease_token`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c')))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 11,
+      "file": "000011_audit_events.sql",
+      "source_sha256": "5ba77012636f670f814afc763c088bbc72aad871e5bb5ef1a53038fbb9a344c8",
+      "object": "audit_events",
+      "kind": "create_table",
+      "definition_sha256": "d2b73efb5ccc915a7a373b0e05790415d2a9bc6cf5ffe3ba57da07f21565f8b7",
+      "definition": "CREATE TABLE `audit_events` (\n  `id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `occurred_at` datetime(6) NOT NULL,\n  `actor_user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `subject_user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `tenant_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `workspace_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `audience` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `action` varchar(64) COLLATE utf8mb4_0900_bin NOT NULL,\n  `outcome` varchar(16) COLLATE utf8mb4_0900_bin NOT NULL,\n  `target_type` varchar(48) COLLATE utf8mb4_0900_bin DEFAULT NULL,\n  `target_id` char(36) CHARACTER SET ascii COLLATE ascii_bin DEFAULT NULL,\n  `request_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `identifier_digest` varbinary(32) DEFAULT NULL,\n  `reason` varchar(500) COLLATE utf8mb4_0900_bin DEFAULT NULL,\n  `metadata` json NOT NULL DEFAULT (json_object()),\n  PRIMARY KEY (`id`),\n  KEY `audit_list_idx` (`occurred_at` DESC,`id` DESC),\n  KEY `audit_action_idx` (`action`,`occurred_at` DESC,`id` DESC),\n  KEY `actor_user_id` (`actor_user_id`),\n  KEY `subject_user_id` (`subject_user_id`),\n  KEY `tenant_id` (`tenant_id`,`workspace_id`),\n  CONSTRAINT `audit_events_ibfk_1` FOREIGN KEY (`actor_user_id`) REFERENCES `users` (`id`),\n  CONSTRAINT `audit_events_ibfk_2` FOREIGN KEY (`subject_user_id`) REFERENCES `users` (`id`),\n  CONSTRAINT `audit_events_ibfk_3` FOREIGN KEY (`tenant_id`) REFERENCES `tenants` (`id`),\n  CONSTRAINT `audit_events_ibfk_4` FOREIGN KEY (`tenant_id`, `workspace_id`) REFERENCES `workspaces` (`tenant_id`, `id`),\n  CONSTRAINT `audit_events_chk_1` CHECK ((`audience` in (_utf8mb4'portal',_utf8mb4'admin',_utf8mb4'operator',_utf8mb4'system'))),\n  CONSTRAINT `audit_events_chk_2` CHECK ((`outcome` in (_utf8mb4'success',_utf8mb4'failure',_utf8mb4'accepted'))),\n  CONSTRAINT `audit_events_chk_3` CHECK (((`identifier_digest` is null) or (length(`identifier_digest`) = 32))),\n  CONSTRAINT `audit_events_chk_4` CHECK (((`workspace_id` is null) or (`tenant_id` is not null))),\n  CONSTRAINT `audit_events_chk_5` CHECK ((json_type(`metadata`) = _utf8mb4'OBJECT')),\n  CONSTRAINT `audit_events_chk_6` CHECK ((length(cast(`metadata` as char charset utf8mb4)) <= 4096)),\n  CONSTRAINT `audit_events_id_canonical` CHECK (regexp_like(`id`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c')),\n  CONSTRAINT `audit_request_canonical` CHECK (regexp_like(`request_id`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c')),\n  CONSTRAINT `audit_target_canonical` CHECK (((`target_id` is null) or regexp_like(`target_id`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c')))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 12,
+      "file": "000012_rate_limit_buckets.sql",
+      "source_sha256": "5cfd23ec6581e217bd1ed02ef13eecf747ab6f220e2ac34f928613b0a1989498",
+      "object": "rate_limit_buckets",
+      "kind": "create_table",
+      "definition_sha256": "5c2762f9441606ae3a4101d2435c5eae3556585e9e04467b2fd3db95cb7780fd",
+      "definition": "CREATE TABLE `rate_limit_buckets` (\n  `bucket_key` varbinary(32) NOT NULL,\n  `window_started_at` datetime(6) NOT NULL,\n  `expires_at` datetime(6) NOT NULL,\n  `attempt_count` int NOT NULL,\n  `last_admitted_at` datetime(6) DEFAULT NULL,\n  PRIMARY KEY (`bucket_key`),\n  KEY `rate_limit_expiry_idx` (`expires_at`),\n  CONSTRAINT `rate_limit_buckets_chk_1` CHECK ((length(`bucket_key`) = 32)),\n  CONSTRAINT `rate_limit_buckets_chk_2` CHECK ((`attempt_count` >= 0)),\n  CONSTRAINT `rate_limit_buckets_chk_3` CHECK ((`expires_at` > `window_started_at`))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 13,
+      "file": "000013_idempotency_records.sql",
+      "source_sha256": "0a2c1d6843414facfaf7e828779d00654fae594319b4eedfaaba898af1a13ee0",
+      "object": "idempotency_records",
+      "kind": "create_table",
+      "definition_sha256": "60ac26df0d7a02c1ece363d93f973e0cec4ced7392cf700e4db98b523c97d2f6",
+      "definition": "CREATE TABLE `idempotency_records` (\n  `actor_user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `operation_id` varchar(64) COLLATE utf8mb4_0900_bin NOT NULL,\n  `idempotency_key` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `request_hash` varbinary(32) NOT NULL,\n  `response_status` int NOT NULL,\n  `response_body` json NOT NULL,\n  `created_at` datetime(6) NOT NULL,\n  `expires_at` datetime(6) NOT NULL,\n  PRIMARY KEY (`actor_user_id`,`operation_id`,`idempotency_key`),\n  KEY `idempotency_expiry_idx` (`expires_at`),\n  CONSTRAINT `idempotency_records_ibfk_1` FOREIGN KEY (`actor_user_id`) REFERENCES `users` (`id`),\n  CONSTRAINT `idempotency_key_canonical` CHECK (regexp_like(`idempotency_key`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c')),\n  CONSTRAINT `idempotency_records_chk_1` CHECK ((`operation_id` in (_utf8mb4'createInvitation',_utf8mb4'resendInvitation'))),\n  CONSTRAINT `idempotency_records_chk_2` CHECK ((length(`request_hash`) = 32)),\n  CONSTRAINT `idempotency_records_chk_3` CHECK ((`response_status` in (200,201))),\n  CONSTRAINT `idempotency_records_chk_4` CHECK ((`expires_at` > `created_at`)),\n  CONSTRAINT `idempotency_records_chk_5` CHECK ((json_type(`response_body`) = _utf8mb4'OBJECT')),\n  CONSTRAINT `idempotency_records_chk_6` CHECK ((length(cast(`response_body` as char charset utf8mb4)) <= 16384))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 14,
+      "file": "000014_workspace_notes.sql",
+      "source_sha256": "360d5dfa1331f8ed41c2c7664723c3b5f6fce5fd8cd7094cb4bdd09ff3de5349",
+      "object": "workspace_notes",
+      "kind": "create_table",
+      "definition_sha256": "e0a322898ec3bb7b557aa956281674f920fdff6b9788271ef6a6178bbf2b1702",
+      "definition": "CREATE TABLE `workspace_notes` (\n  `id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `tenant_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `workspace_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `title` varchar(100) COLLATE utf8mb4_0900_bin NOT NULL,\n  `text` text COLLATE utf8mb4_0900_bin NOT NULL,\n  `author_user_id` char(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,\n  `version` bigint NOT NULL DEFAULT '1',\n  `created_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n  `updated_at` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),\n  `deleted_at` datetime(6) DEFAULT NULL,\n  PRIMARY KEY (`id`),\n  KEY `notes_scope_list_idx` (`tenant_id`,`workspace_id`,`deleted_at`,`created_at` DESC,`id` DESC),\n  KEY `author_user_id` (`author_user_id`),\n  CONSTRAINT `workspace_notes_ibfk_1` FOREIGN KEY (`author_user_id`) REFERENCES `users` (`id`),\n  CONSTRAINT `workspace_notes_ibfk_2` FOREIGN KEY (`tenant_id`, `workspace_id`) REFERENCES `workspaces` (`tenant_id`, `id`),\n  CONSTRAINT `workspace_notes_chk_1` CHECK ((length(`text`) <= 8192)),\n  CONSTRAINT `workspace_notes_chk_2` CHECK ((`version` between 1 and 9007199254740991)),\n  CONSTRAINT `workspace_notes_id_canonical` CHECK (regexp_like(`id`,_utf8mb4'^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$',_utf8mb4'c'))\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_bin"
+    },
+    {
+      "step": 15,
+      "file": "000015_installation_seed.sql",
+      "source_sha256": "226148d1e3d549f3280a7212fa3525839ef1a8f3a5a681164f3cad7d1981d405",
+      "object": "installation_seed",
+      "kind": "seed",
+      "definition_sha256": "bf644585fd6c00683044bc62fc12df457df5b982a76a42ae594b9daebbf8068c",
+      "definition": "EXISTS installation_state id=1"
+    }
+  ]
+}
