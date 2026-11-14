@@ -1,0 +1,5 @@
+#!/usr/bin/env python3
+"""Retired APP workload entry point; admission remains NOTRUN."""
+import sys
+sys.stderr.write("APP_OLD_GATE_CLOSED: no epoch is activated; admission is NOTRUN.\n")
+raise SystemExit(125)

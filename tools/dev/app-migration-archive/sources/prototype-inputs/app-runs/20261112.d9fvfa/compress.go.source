@@ -1,0 +1,3 @@
+package main
+import("archive/tar"; "io"; "os"; "path/filepath"; "github.com/klauspost/compress/zstd")
+func main(){f,e:=os.Create(os.Args[2]);if e!=nil{panic(e)};defer f.Close();z,e:=zstd.NewWriter(f,zstd.WithEncoderLevel(zstd.SpeedBestCompression),zstd.WithWindowSize(1<<27),zstd.WithEncoderConcurrency(1));if e!=nil{panic(e)};defer z.Close();t:=tar.NewWriter(z);defer t.Close();for _,name:=range os.Args[3:] {p:=filepath.Join(os.Args[1],name);in,e:=os.Open(p);if e!=nil{panic(e)};s,e:=in.Stat();if e!=nil{panic(e)};h,e:=tar.FileInfoHeader(s,"");if e!=nil{panic(e)};h.Name=name;if e=t.WriteHeader(h);e!=nil{panic(e)};if _,e=io.Copy(t,in);e!=nil{panic(e)};in.Close()}}

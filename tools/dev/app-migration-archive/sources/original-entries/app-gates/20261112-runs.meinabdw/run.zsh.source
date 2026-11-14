@@ -1,0 +1,97 @@
+set -euo pipefail
+umask 022
+app_run=$1
+app_worktree=$2
+app_lock=/private/tmp/ownsolid-workstation-full-gate.lock
+app_mount=/private/tmp/or-meinabdw
+cd "$app_worktree"
+test "$(cat "$app_lock/owner")" = "$app_run"
+test -z "$(git status --porcelain)"
+test ! -e tools/audit-verify/audit-verify
+test ! -e "$app_mount"
+cleanup() {
+  app_status=$?
+  trap - EXIT
+  if mount | grep -F " on $app_mount (" >/dev/null; then
+    hdiutil detach "$app_mount" >> "$app_run/cleanup.log" 2>&1 || app_status=1
+  fi
+  if test -d "$app_mount" && ! mount | grep -F " on $app_mount (" >/dev/null; then
+    rmdir "$app_mount" || app_status=1
+  fi
+  # Keep the admission lock through focused verification and fast-forward push.
+  # The owning session releases it explicitly after reviewing the final outcome.
+  printf '%s\n' "$app_status" > "$app_run/exit-status"
+  date -u > "$app_run/finish"
+  exit "$app_status"
+}
+trap cleanup EXIT
+export PYTHON="$(uv python find 3.12)"
+export PYTHONDONTWRITEBYTECODE=1
+export GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOFLAGS=-p=1
+export CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=2
+export VITEST_MAX_WORKERS=2
+printf 'sync\n' > "$app_run/stage"
+git fetch origin > "$app_run/sync.log" 2>&1
+git rebase origin/main >> "$app_run/sync.log" 2>&1
+"$PYTHON" tools/dev/roadmap_progress.py > "$app_run/roadmap.log"
+test -z "$(git status --porcelain)"
+git rev-parse HEAD > "$app_run/head"
+git log --oneline origin/main..HEAD > "$app_run/candidates"
+git diff --check
+hdiutil create -size 12g -type SPARSE -fs APFS -volname ownsolid-app-gate "$app_run/scratch" > "$app_run/volume-create.log"
+mkdir "$app_mount"
+hdiutil attach -nobrowse -mountpoint "$app_mount" "$app_run/scratch.sparseimage" > "$app_run/volume-attach.log"
+mkdir "$app_mount/tmp"
+export TMPDIR="$app_mount/tmp/"
+test "$(stat -f %u "$TMPDIR")" = "$(id -u)"
+test "$(stat -f %g "$TMPDIR")" = "$(id -g)"
+df -h "$TMPDIR" > "$app_run/scratch-space"
+date -u > "$app_run/start"
+printf 'check\n' > "$app_run/stage"
+make check > "$app_run/check.log" 2>&1
+printf 'make check passed\n'
+printf 'build\n' > "$app_run/stage"
+make build > "$app_run/build.log" 2>&1
+printf 'make build passed\n'
+if test -f tools/audit-verify/audit-verify; then
+  test -z "$(git ls-files -- tools/audit-verify/audit-verify)"
+  rm tools/audit-verify/audit-verify
+fi
+app_port="$("$PYTHON" - <<'PY'
+import random
+import socket
+from contextlib import ExitStack
+for candidate in random.SystemRandom().sample(range(49000,63000,2),80):
+    try:
+        with ExitStack() as sockets:
+            for port in (candidate,candidate+1):
+                for family,host in ((socket.AF_INET,'127.0.0.1'),(socket.AF_INET6,'::1')):
+                    sock=sockets.enter_context(socket.socket(family))
+                    sock.bind((host,port))
+        print(candidate)
+        break
+    except OSError:
+        continue
+else:
+    raise SystemExit('No private browser ports found')
+PY
+)"
+export OWNSOLID_PLAYWRIGHT_PORT_OFFSET=$((app_port - 4310))
+printf '%s %s\n' "$app_port" "$((app_port + 1))" > "$app_run/ports"
+cat > "$app_run/browser-concurrency.mk" <<'MAKE'
+test-web-browser: web-install
+	@cd web && pnpm --filter ./apps/console run test:browser --workers=2
+	@cd web && pnpm --filter ./apps/portal run test:browser --workers=2
+MAKE
+printf 'test\n' > "$app_run/stage"
+make -f Makefile -f "$app_run/browser-concurrency.mk" test > "$app_run/test.log" 2>&1
+printf 'make test passed\n'
+printf 'affected\n' > "$app_run/stage"
+go -C services/control test -race ./internal/modules/productagent/... ./internal/modules/audit/... > "$app_run/affected-race.log" 2>&1
+go -C services/control vet ./internal/modules/productagent/... ./internal/modules/audit/... > "$app_run/affected-vet.log" 2>&1
+PYTHONPATH="$app_worktree/runtimes/model-lifecycle:$app_worktree/runtimes/data-processing:$app_worktree/runtimes/training:$app_worktree/services/control/internal/modules/productagent/testdata" "$PYTHON" -B -m unittest discover -s services/control/internal/modules/productagent/testdata -p 'test_qualify_model.py' > "$app_run/qualifier-unit.log" 2>&1
+printf 'Focused race, vet and qualifier checks passed\n'
+git diff --check
+test -z "$(git status --porcelain)"
+git rev-parse HEAD > "$app_run/ok"
+printf 'complete\n' > "$app_run/stage"

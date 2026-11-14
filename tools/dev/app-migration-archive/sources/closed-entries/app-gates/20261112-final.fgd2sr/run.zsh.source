@@ -1,0 +1,3 @@
+#!/bin/sh
+printf '%s\n' 'APP_OLD_GATE_CLOSED: no epoch is activated; admission is NOTRUN.' >&2
+exit 125

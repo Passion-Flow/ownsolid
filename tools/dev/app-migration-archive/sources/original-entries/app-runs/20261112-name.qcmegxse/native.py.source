@@ -1,0 +1,66 @@
+from pathlib import Path
+import fcntl, hashlib, json, os, subprocess, sys, time, uuid
+
+root=Path(sys.argv[1]).resolve()
+source=root/'source'
+base='1280ea79'
+cache=Path('/root/lane-app-runs-20261112.o0Ygio/go-build')
+lock=open('/run/lock/ownsolid-heavy.lock','a')
+fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+def run(*args,**kw):
+    return subprocess.run(args,check=True,text=True,**kw)
+with (root/'preflight.log').open('w') as log:
+    run('df','-h','/',stdout=log)
+    run('free','-m',stdout=log)
+source.mkdir()
+archive=subprocess.Popen(['git','-C','/root/ownsolid','archive',base],stdout=subprocess.PIPE)
+run('tar','-x','-C',str(source),stdin=archive.stdout)
+archive.stdout.close()
+if archive.wait(): raise RuntimeError('Source archive failed')
+run('git','apply','--check',str(root/'source.patch'),cwd=source)
+run('git','apply',str(root/'source.patch'),cwd=source)
+(root/'overlay').mkdir()
+run('python3',str(source/'services/control/internal/modules/productagent/http/testdata/dispatch_overlay.py'),str(root/'overlay'))
+sdk='sha256:d9b6a1beb9474adc2a1ce842573639b44b2a0dd49b6669f51d3821baf9ec37c9'
+for name,package,tags in [('repository','productagent','repository_integration'),('http','productagent/http','repository_integration,assistant_http_dispatch')]:
+    command=['docker','run','--rm','--pull=never','--network','none','--cpus','2','-v',str(root)+':'+str(root),'-v',str(cache)+':'+str(cache),'-v','/root/go/pkg/mod:/go/pkg/mod:ro','-w',str(source/'services/control'),'-e','GOPROXY=off','-e','GOSUMDB=off','-e','GOTOOLCHAIN=local','-e','CGO_ENABLED=0','-e','GOMAXPROCS=2','-e','GOFLAGS=-p=1','-e','GOCACHE='+str(cache),sdk,'go','test','-p=1','-c','-ldflags=-s -w','-tags='+tags,'-o',str(root/(name+'.test'))]
+    if name=='http': command+=['-overlay='+str(root/'overlay/overlay.json')]
+    command+=['./internal/modules/'+package]
+    with (root/(name+'-build.log')).open('w') as log: run(*command,stdout=log,stderr=subprocess.STDOUT)
+    print(name+' compiled',flush=True)
+image,system,arch=run('docker','image','inspect','--format','{{.Id}} {{.Os}} {{.Architecture}}','pgvector/pgvector:0.8.7-pg18-bookworm',capture_output=True).stdout.split()
+assert (system,arch)==('linux','amd64')
+container=run('docker','run','--rm','--pull=never','--network','none','--cpus','2','-d','-e','POSTGRES_HOST_AUTH_METHOD=trust','-e','POSTGRES_DB=assistant_fixture_test',image,capture_output=True).stdout.strip()
+(root/'container').write_text(container+'\n')
+fixture='/tmp/assistant-fixture'; dsn=fixture+'/postgres.dsn'
+passed=[]
+try:
+    deadline=time.monotonic()+45
+    while subprocess.run(['docker','exec',container,'pg_isready','-q','-h','127.0.0.1','-U','postgres','-d','assistant_fixture_test'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=5).returncode:
+        if time.monotonic()>deadline: raise RuntimeError('Private PostgreSQL startup failed')
+        time.sleep(1)
+    with (root/'postgres.log').open('w') as log: run('docker','exec',container,'psql','-X','-U','postgres','-d','assistant_fixture_test','-v','ON_ERROR_STOP=1','-c',"CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC; SHOW server_version;",stdout=log,stderr=subprocess.STDOUT)
+    run('docker','exec',container,'install','-d','-m','0700',fixture,fixture+'/services/control/internal/modules/productagent',fixture+'/services/control/internal/modules/productagent/http',fixture+'/services/control/internal/modules/productagent/testdata')
+    run('docker','exec','-i',container,'sh','-c','umask 077; cat > "$1"','sh',dsn,input='postgresql://postgres@127.0.0.1:5432/assistant_fixture_test?sslmode=disable\n')
+    run('docker','cp',str(source/'services/control/internal/modules/productagent/testdata/execution-budget.sql'),container+':'+fixture+'/services/control/internal/modules/productagent/testdata/execution-budget.sql',stdout=subprocess.DEVNULL)
+    cases=[('repository','productagent','Test(DurableExecutionBudgets|DurableExecutionRuns|OfflineCommandsWithCurrentSessionAndWorkspace|ApplicationNameResolutionWithDurableRun|ApplicationNameResolutionFinalFences)'),('http','productagent/http','TestAuthenticated(Guarded)?AssistantHTTP')]
+    for name,package,pattern in cases:
+        run('docker','cp',str(root/(name+'.test')),container+':'+fixture+'/'+name+'.test',stdout=subprocess.DEVNULL)
+        command=['docker','exec','-w',fixture+'/services/control/internal/modules/'+package,'-e','GOMAXPROCS=2','-e','PROJECT_ONE_TEST_DSN_FILE='+dsn,'-e','PROJECT_ONE_REPOSITORY_ENGINE=postgresql','-e','PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE='+dsn,'-e','PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA=m20_repository_'+uuid.uuid4().hex,container,fixture+'/'+name+'.test','-test.v','-test.parallel=1','-test.timeout=240s','-test.run','^'+pattern+'$']
+        result=subprocess.run(command,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=270)
+        (root/(name+'.log')).write_text(result.stdout)
+        result.check_returncode()
+        if '--- SKIP:' in result.stdout or '--- FAIL:' in result.stdout or '--- PASS:' not in result.stdout: raise RuntimeError('Required test did not pass')
+        passed.append(name)
+        print(name+' acceptance passed',flush=True)
+    network=run('docker','inspect','--format','{{.HostConfig.NetworkMode}}',container,capture_output=True).stdout.strip()
+    assert network=='none'
+    (root/'proof.json').write_text(json.dumps({'head':(root/'head').read_text().strip(),'base':base,'patch_sha256':hashlib.sha256((root/'source.patch').read_bytes()).hexdigest(),'sdk_image':sdk,'postgres_image':image,'architecture':arch,'network':network,'passed':passed},indent=2)+'\n')
+finally:
+    with (root/'postgres-server.log').open('w') as log: subprocess.run(['docker','logs',container],stdout=log,stderr=subprocess.STDOUT)
+    stopped=subprocess.run(['docker','stop','--time','5',container],text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    (root/'stop.log').write_text(stopped.stdout)
+    absent=subprocess.run(['docker','inspect',container],text=True,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
+    if absent.returncode and 'No such object' in absent.stderr:
+        (root/'removed').write_text(container+'\n')
+    else: raise RuntimeError('Owned fixture removal was not confirmed')

@@ -1,0 +1,2956 @@
+{
+  "format_version": 1,
+  "scope": "Mac APP private-source preservation only; not product acceptance",
+  "base_github_main": "5790b8961955400ffe25f10ced170bf4f669683c",
+  "original_tip_mapping": {
+    "refs/heads/codex/agt-107-identity-admission": {
+      "source_sha": "e19ff8898e96273d7d52900bf7af9f5c19703e4f",
+      "remote_ref": "refs/heads/salvage/mac/app/agt-107-identity-admission-e19ff8898e96",
+      "local_preservation_ref": "refs/heads/salvage/mac/app/agt-107-identity-admission-e19ff8898e96"
+    },
+    "refs/heads/codex/lane-app-agt110-native-evidence": {
+      "source_sha": "254570fb81374910bbb5bc7d18cf1ec268922ccb",
+      "remote_ref": "refs/heads/salvage/mac/app/agt110-native-evidence-254570fb8137",
+      "local_preservation_ref": "refs/heads/salvage/mac/app/agt110-native-evidence-254570fb8137"
+    },
+    "refs/heads/codex/lane-app-agt-112": {
+      "source_sha": "c2b1bb5ab94938633a63f2d3d9eb9dc5f39c1d24",
+      "remote_ref": "refs/heads/salvage/mac/app/agt-112-c2b1bb5ab949",
+      "local_preservation_ref": "refs/heads/salvage/mac/app/agt-112-c2b1bb5ab949"
+    }
+  },
+  "source_file_count": 93,
+  "sources": [
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-final.patch",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-gates/20261112.zozc4w/budget-final.patch.source",
+      "bytes": 60775,
+      "sha256": "d54ae36d1c429dc7a0179fd4da72b06c20d52478276cddb20c9dac6afc214a84",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/run.zsh",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-gates/20261112.zozc4w/run.zsh.source",
+      "bytes": 104,
+      "sha256": "11644dcbd5cb52d78e2cc5aa55d9ac044b7d226f008d8f4a5c9696a313441506",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/focused.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-gates/20261112.zozc4w/focused.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-candidate.patch",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-gates/20261112.zozc4w/budget-candidate.patch.source",
+      "bytes": 60148,
+      "sha256": "2fd6969ad844a1ab0c0077f22927cdfecf302c2e258040e6c3fe370bc687fe2a",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/native-replay.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-gates/20261112.zozc4w/native-replay.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype-final.patch",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-gates/20261112.zozc4w/budget-prototype-final.patch.source",
+      "bytes": 60775,
+      "sha256": "d54ae36d1c429dc7a0179fd4da72b06c20d52478276cddb20c9dac6afc214a84",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-gates/20261112.zozc4w/budget-prototype/overlay/overlay.json.source",
+      "bytes": 262,
+      "sha256": "93c38e2a687e64b03d5b9b93d284832524a7ff1b66f0274fca09cf1ded6f20f1",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-gates/20261112.zozc4w/budget-prototype/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retry-awake/run.zsh",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-gates/20261112.zozc4w/retry-awake/run.zsh.source",
+      "bytes": 104,
+      "sha256": "11644dcbd5cb52d78e2cc5aa55d9ac044b7d226f008d8f4a5c9696a313441506",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-current/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-gates/20261112.zozc4w/budget-current/overlay/overlay.json.source",
+      "bytes": 253,
+      "sha256": "79b31c8cf4d0d37dd803cd2d9c1ec9116a3a48c3475765c6d5a2bc977bd58651",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-current/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-gates/20261112.zozc4w/budget-current/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-gates/20261112.zozc4w/paired-current/overlay/overlay.json.source",
+      "bytes": 253,
+      "sha256": "bfd4f1a25a892355f7f0bb80c4af4d2e006b46dec328c0887b82e8640627724d",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-gates/20261112.zozc4w/paired-current/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retained/audit-followup.patch",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-gates/20261112.zozc4w/retained/audit-followup.patch.source",
+      "bytes": 4114,
+      "sha256": "8317346f5906c613caee40fffd25d98f7f75291bf8951ce47869c682c2089d18",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/run.zsh",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-gates/20261112-runs.meinabdw/run.zsh.source",
+      "bytes": 104,
+      "sha256": "11644dcbd5cb52d78e2cc5aa55d9ac044b7d226f008d8f4a5c9696a313441506",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/run.zsh",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-gates/20261112-post-native.te1juope/run.zsh.source",
+      "bytes": 104,
+      "sha256": "11644dcbd5cb52d78e2cc5aa55d9ac044b7d226f008d8f4a5c9696a313441506",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/run.zsh",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-gates/20261112-final.fgd2sr/run.zsh.source",
+      "bytes": 104,
+      "sha256": "11644dcbd5cb52d78e2cc5aa55d9ac044b7d226f008d8f4a5c9696a313441506",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/run.zsh",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-gates/20261112-merge.x08bzz/run.zsh.source",
+      "bytes": 104,
+      "sha256": "11644dcbd5cb52d78e2cc5aa55d9ac044b7d226f008d8f4a5c9696a313441506",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/post-rebase.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112-name.qcmegxse/post-rebase.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/source.patch",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112-name.qcmegxse/source.patch.source",
+      "bytes": 46636,
+      "sha256": "51efd745687ab9c4cc90ed0e2e3a96180f86162f4571c35ed1e6113233c082a5",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112-name.qcmegxse/local.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112-name.qcmegxse/native.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/gate.zsh",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112-name.qcmegxse/gate.zsh.source",
+      "bytes": 104,
+      "sha256": "11644dcbd5cb52d78e2cc5aa55d9ac044b7d226f008d8f4a5c9696a313441506",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/gate.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112-name.qcmegxse/gate.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/publish.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112-name.qcmegxse/publish.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112-name.qcmegxse/local-postgres/overlay/overlay.json.source",
+      "bytes": 259,
+      "sha256": "eedb9b1d8cd879e65510c2b522369122713a87300e394118e55c4762debf02d3",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112-name.qcmegxse/local-postgres/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112-name.qcmegxse/local-overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/source.patch",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112-name.qcmegxse/native-schema59/source.patch.source",
+      "bytes": 118008,
+      "sha256": "bdc3e2f915bdd680e9a02e608814f066491ccdfcb1b8342ba8688d2bc32ed15c",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/native.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112-name.qcmegxse/native-schema59/native.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112.d9fvfa/guarded.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/focused.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112.d9fvfa/focused.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-search-build.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112.d9fvfa/native-search-build.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/all-focused.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112.d9fvfa/all-focused.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-fixture.patch",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/native-fixture.patch.source",
+      "bytes": 15203,
+      "sha256": "251e9325f14513c6fed87222dc16549c8e98de64e072148857b662842ea7be49",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/compress.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/compress.go.source",
+      "bytes": 668,
+      "sha256": "890bf17c3c3ae34bbbc0164d8c0b182d146fa59d5442d5e4fb589d3c0b67cd6c",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/prepare-native-small.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112.d9fvfa/prepare-native-small.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-native.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112.d9fvfa/run-native.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-audit-build.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112.d9fvfa/native-audit-build.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/prepare-native.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112.d9fvfa/prepare-native.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/schema58-all/overlay/overlay.json.source",
+      "bytes": 250,
+      "sha256": "6a2feb9deb6bf014ac656d211e39c74af05fc13b08ed8a4650b73a9203aed0f8",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/schema58-all/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/execution-budget.sql",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/native-small/execution-budget.sql.source",
+      "bytes": 2867,
+      "sha256": "10e347470827f48d8efb21e2ed3956d389ca5060c2cd2552192269500c428483",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/run-native.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112.d9fvfa/native-small/run-native.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/export.sql",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/native-small/export.sql.source",
+      "bytes": 1068,
+      "sha256": "1342d9c23dce45d28540d0054c8613ed8a291abfee8b6ce81c1d7d4cc8b52877",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/native-small/overlay/overlay.json.source",
+      "bytes": 250,
+      "sha256": "98b19161e79e661f8284d1e56c4d677833aa66fba508650fd6f903df5ad059fa",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/native-small/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/execution-budget.sql",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/native-input/execution-budget.sql.source",
+      "bytes": 2867,
+      "sha256": "10e347470827f48d8efb21e2ed3956d389ca5060c2cd2552192269500c428483",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/run-native.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/closed-entries/app-runs/20261112.d9fvfa/native-input/run-native.py.source",
+      "bytes": 209,
+      "sha256": "7a48665235f3143ef70ca9f3bd9730cbed9a91ee1427d266416adf94d405e675",
+      "kind": "retired closed entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/export.sql",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/native-input/export.sql.source",
+      "bytes": 1068,
+      "sha256": "1342d9c23dce45d28540d0054c8613ed8a291abfee8b6ce81c1d7d4cc8b52877",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/native-input/overlay/overlay.json.source",
+      "bytes": 250,
+      "sha256": "45e49ccdcca0548f667278b060f8a3789dc7edfd4ad1d66c345f1bf7cf74a958",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/native-input/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-final-19/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/run-final-19/overlay/overlay.json.source",
+      "bytes": 250,
+      "sha256": "5f37bade5cab6628b6972f84b62fd3f05c4a3acdb64ac37947e849c79fa3e000",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-final-19/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/run-final-19/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-guard-final/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/run-guard-final/overlay/overlay.json.source",
+      "bytes": 253,
+      "sha256": "aa18e8c2da586b47fd43b79e6584cafe748ee7d380dcf569c66549f23742c6a3",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-guard-final/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/run-guard-final/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-atomic/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/guarded-http-atomic/overlay/overlay.json.source",
+      "bytes": 257,
+      "sha256": "4146d74faea42ec50013fe3c7f9d7f3ae130f8c8732fea03416908688e02654f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-atomic/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/guarded-http-atomic/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-prototype/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/guarded-http-prototype/overlay/overlay.json.source",
+      "bytes": 260,
+      "sha256": "2ecaf41f9dbbb959a2f8517326de74de45169d1ee91d3aeec4ab76d8b59d34b0",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-prototype/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/guarded-http-prototype/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-prototype/overlay/overlay.json",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/run-prototype/overlay/overlay.json.source",
+      "bytes": 251,
+      "sha256": "0b97fcd64112dcdd05e606e2a9cb8184e85076bd54b5b75d08a02a05b2844599",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-prototype/overlay/identity-handler.go",
+      "archive_path": "tools/dev/app-migration-archive/sources/prototype-inputs/app-runs/20261112.d9fvfa/run-prototype/overlay/identity-handler.go.source",
+      "bytes": 43130,
+      "sha256": "d3810cc0b87b7f5e76decb9d7a4993c9ee63bc323799598bd90c51e87c899a7f",
+      "kind": "prototype/test source or required configuration",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/01-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-gates/20261112-final.fgd2sr/run.zsh.source",
+      "bytes": 4248,
+      "sha256": "e62730a35a88482dcd47c00d91803c3eb2de1a5749b4446998ee4c52b3930a8e",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/02-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-gates/20261112-merge.x08bzz/run.zsh.source",
+      "bytes": 4248,
+      "sha256": "6ff7b5c38ff99f90239d9d1645b0cf3109b48ad2909a8e2f0407ba4906b9f843",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/03-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-gates/20261112-post-native.te1juope/run.zsh.source",
+      "bytes": 4250,
+      "sha256": "9eb552659e8268fd99d7d06b440358919cb13e0f850033229e7690348f178388",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/04-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-gates/20261112-runs.meinabdw/run.zsh.source",
+      "bytes": 4250,
+      "sha256": "5521650abf0fa5d13c708c4571029b04a3c2edad1fbadadc2cbb07b5688d6a8c",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/05-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-gates/20261112.zozc4w/focused.py.source",
+      "bytes": 5833,
+      "sha256": "a48a960f7905e9f5300617956711982dd2ae44f74351dd4b45b4f714198a6fbf",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/06-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-gates/20261112.zozc4w/native-replay.py.source",
+      "bytes": 2781,
+      "sha256": "c06b0aae269822519e83593636ac6131cb5eb2dd8e745da3093818ea33fac02d",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/07-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-gates/20261112.zozc4w/retry-awake/run.zsh.source",
+      "bytes": 2051,
+      "sha256": "cef8b3d4ed1a1ba5341a81314b09cfdc1c7365c81d9e591719e8caf017189440",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/08-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-gates/20261112.zozc4w/run.zsh.source",
+      "bytes": 4248,
+      "sha256": "6ff7b5c38ff99f90239d9d1645b0cf3109b48ad2909a8e2f0407ba4906b9f843",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/09-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112-name.qcmegxse/gate.py.source",
+      "bytes": 868,
+      "sha256": "593125e7dd5ed3eeced51e8a2db2979aefb97d5c3d47ede1cac89357c7a9ac48",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/10-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112-name.qcmegxse/gate.zsh.source",
+      "bytes": 4173,
+      "sha256": "b4266a16030ee014e71973263f690ba92bffa6274518615a1f48d5047deda98f",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/11-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112-name.qcmegxse/local.py.source",
+      "bytes": 5906,
+      "sha256": "7b3fe750995a0e2d2447208ece46b573dc79e938f1a7d9de75edd94507526eff",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/12-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112-name.qcmegxse/native-schema59/native.py.source",
+      "bytes": 6285,
+      "sha256": "cb29d1ca29026989f87a09dffa012655738ea029be4cb453669ba8fcb219573a",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/13-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112-name.qcmegxse/native.py.source",
+      "bytes": 6277,
+      "sha256": "a516155e6b5e38aa6810b30841c152b00af4ee0b416ecd151c3287a67a870981",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/14-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112-name.qcmegxse/post-rebase.py.source",
+      "bytes": 5368,
+      "sha256": "ec9731a4df29bd95b02368f89b21d2b443b1c5abc5424fb0857b83f5635a3578",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/15-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112-name.qcmegxse/publish.py.source",
+      "bytes": 2433,
+      "sha256": "68b611db9cd16c3bb605b4b40251e77de5ae29195aec31ebe23400418a1606b0",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/16-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112.d9fvfa/all-focused.py.source",
+      "bytes": 6233,
+      "sha256": "e2f150ade37cc1cd5f3a9164f768e00aa7905d4033c2f6ce292f751f450c2cff",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/17-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112.d9fvfa/focused.py.source",
+      "bytes": 5830,
+      "sha256": "acd85b18cba09e9332b00f320cf9518645d04e97815ee216bf55613a2d66a30a",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/18-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112.d9fvfa/guarded.py.source",
+      "bytes": 6177,
+      "sha256": "9129bc580b6899c0751218a1909d02feb11721cf7ec31e185790bb69c55973be",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/19-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112.d9fvfa/native-audit-build.py.source",
+      "bytes": 1814,
+      "sha256": "b8395ebd45beef665f6ccf7f9cc5ab6429efdc37097b68ad4a1b00242f0d8df3",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/20-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112.d9fvfa/native-input/run-native.py.source",
+      "bytes": 4778,
+      "sha256": "4e03db4ecc8be30030afdca055fe2573ca950f76e83e9b9e328bc983faf8648c",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/21-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112.d9fvfa/native-search-build.py.source",
+      "bytes": 1861,
+      "sha256": "8de1311e8316a9cbf8c9d18fb81bf626aacc88d7d03fb2fc6c91141606a20854",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/22-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112.d9fvfa/native-small/run-native.py.source",
+      "bytes": 4947,
+      "sha256": "60cb9e8b9b9216ba5423aa414a546b9297214b53d35512a85d7f73738ada5aed",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/23-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112.d9fvfa/prepare-native-small.py.source",
+      "bytes": 2238,
+      "sha256": "dcc48ae31b4d70f1b85b96ea94d59f1aac01ee06bfecf8a91fa6e605a9251e7c",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/24-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112.d9fvfa/prepare-native.py.source",
+      "bytes": 2204,
+      "sha256": "660d4242198862f78636bc7f34a4d3066b4f06e0e3edbd0e7e716b2fe0c38ead",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/25-source.json#original_source_base64",
+      "archive_path": "tools/dev/app-migration-archive/sources/original-entries/app-runs/20261112.d9fvfa/run-native.py.source",
+      "bytes": 4778,
+      "sha256": "4e03db4ecc8be30030afdca055fe2573ca950f76e83e9b9e328bc983faf8648c",
+      "kind": "complete readable pre-retirement source projection; never an admission entry",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input.tar.gz!run-native.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-input-tar-gz/run-native.py.source",
+      "bytes": 4778,
+      "sha256": "4e03db4ecc8be30030afdca055fe2573ca950f76e83e9b9e328bc983faf8648c",
+      "kind": "readable source member; binary archive is not committed",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input.tar.gz!export.sql",
+      "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-input-tar-gz/export.sql.source",
+      "bytes": 1068,
+      "sha256": "1342d9c23dce45d28540d0054c8613ed8a291abfee8b6ce81c1d7d4cc8b52877",
+      "kind": "readable source member; binary archive is not committed",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input.tar.gz!execution-budget.sql",
+      "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-input-tar-gz/execution-budget.sql.source",
+      "bytes": 2867,
+      "sha256": "10e347470827f48d8efb21e2ed3956d389ca5060c2cd2552192269500c428483",
+      "kind": "readable source member; binary archive is not committed",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small.tar.zst!run-native.py",
+      "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-small-tar-zst/run-native.py.source",
+      "bytes": 4947,
+      "sha256": "60cb9e8b9b9216ba5423aa414a546b9297214b53d35512a85d7f73738ada5aed",
+      "kind": "readable source member; binary archive is not committed",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small.tar.zst!export.sql",
+      "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-small-tar-zst/export.sql.source",
+      "bytes": 1068,
+      "sha256": "1342d9c23dce45d28540d0054c8613ed8a291abfee8b6ce81c1d7d4cc8b52877",
+      "kind": "readable source member; binary archive is not committed",
+      "executable": false
+    },
+    {
+      "origin": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small.tar.zst!execution-budget.sql",
+      "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-small-tar-zst/execution-budget.sql.source",
+      "bytes": 2867,
+      "sha256": "10e347470827f48d8efb21e2ed3956d389ca5060c2cd2552192269500c428483",
+      "kind": "readable source member; binary archive is not committed",
+      "executable": false
+    }
+  ],
+  "excluded_count": 413,
+  "exclusions": [
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/final.path",
+      "bytes": 70,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/merge.path",
+      "bytes": 70,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/post-native.path",
+      "bytes": 78,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/current.path",
+      "bytes": 64,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/current-runs.path",
+      "bytes": 71,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/candidates",
+      "bytes": 145,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/exit-status",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/volume-create.log",
+      "bytes": 93,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/current-race.log",
+      "bytes": 388,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/browser-concurrency.mk",
+      "bytes": 169,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/current-vet.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/test.log",
+      "bytes": 202005,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/prototype-patch-equivalence",
+      "bytes": 86,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/start",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/scratch-space",
+      "bytes": 166,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/candidate-inputs",
+      "bytes": 164,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/sync.log",
+      "bytes": 84,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/cleanup.log",
+      "bytes": 112,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/finish",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/stage",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/current-qualifier-unit.log",
+      "bytes": 103,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/roadmap.log",
+      "bytes": 34,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/check.log",
+      "bytes": 1510,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype-final.sha256",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/ports",
+      "bytes": 12,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/volume-attach.log",
+      "bytes": 292,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/build.log",
+      "bytes": 67200,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype/repository.log",
+      "bytes": 1957,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype/repository.test",
+      "bytes": 19281414,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-prototype/build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/native-replay/substitution.stderr",
+      "bytes": 39,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/native-replay/substitution.stdout",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/native-replay/control.stdout",
+      "bytes": 848,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/native-replay/native.stdout",
+      "bytes": 983,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/native-replay/network-denied",
+      "bytes": 49,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/native-replay/control.stderr",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/native-replay/native.stderr",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retry-awake/exit-status",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retry-awake/test.log",
+      "bytes": 280753,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retry-awake/sleep-evidence",
+      "bytes": 666,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retry-awake/start",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retry-awake/assertions",
+      "bytes": 1972,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retry-awake/cleanup.log",
+      "bytes": 112,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retry-awake/finish",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retry-awake/volume-attach.log",
+      "bytes": 292,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/models-rides-out-a-lost-an-7c06c-ped-connection-without-help-chromium/trace.zip",
+      "bytes": 304836,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/models-rides-out-a-lost-an-7c06c-ped-connection-without-help-chromium/error-context.md",
+      "bytes": 14627,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/models-keeps-a-paused-uplo-203ac-me-settings-are-unavailable-chromium/trace.zip",
+      "bytes": 170526,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/models-keeps-a-paused-uplo-203ac-me-settings-are-unavailable-chromium/error-context.md",
+      "bytes": 13956,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/models-retries-a-failed-mo-22f6a--returns-to-its-lineage-tab-chromium/trace.zip",
+      "bytes": 1071451,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/models-retries-a-failed-mo-22f6a--returns-to-its-lineage-tab-chromium/error-context.md",
+      "bytes": 9109,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/navigation-what-a-person-o-6fbba-n-they-move-to-another-page-chromium/trace.zip",
+      "bytes": 96045,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/navigation-what-a-person-o-6fbba-n-they-move-to-another-page-chromium/error-context.md",
+      "bytes": 9085,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-current/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-current/repository.log",
+      "bytes": 2285,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-current/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-current/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-current/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-current/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-current/repository.test",
+      "bytes": 19284110,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/budget-current/build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/portal-diagnostic/run.log",
+      "bytes": 3722,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/portal-failure/keyboard-keyboard-a-key-s--24cf0-s-reachable-and-shows-focus-chromium/trace.zip",
+      "bytes": 361331,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/portal-failure/keyboard-keyboard-a-key-s--24cf0-s-reachable-and-shows-focus-chromium/error-context.md",
+      "bytes": 18298,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/repository.log",
+      "bytes": 1153,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/audit-verify",
+      "bytes": 8418727,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/audit.log",
+      "bytes": 1437,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/http.log",
+      "bytes": 38510,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/audit.test",
+      "bytes": 17079630,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/http.test",
+      "bytes": 59388640,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/repository.test",
+      "bytes": 19284110,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/paired-current/build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retained/integration-recheck.md",
+      "bytes": 3441,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retained/publication/version.json",
+      "bytes": 1993,
+      "reason": "retained model/dataset/capture data or qualification output; not source/configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retained/publication/validation.jsonl",
+      "bytes": 655,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retained/refusal-control/control-report.json",
+      "bytes": 2338,
+      "reason": "retained model/dataset/capture data or qualification output; not source/configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retained/refusal-control/control-capture.json",
+      "bytes": 1105,
+      "reason": "retained model/dataset/capture data or qualification output; not source/configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retained/run-1/raw-cases.json",
+      "bytes": 1871,
+      "reason": "retained model/dataset/capture data or qualification output; not source/configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retained/run-1/report.json",
+      "bytes": 2327,
+      "reason": "retained model/dataset/capture data or qualification output; not source/configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/retained/run-1/capture.json",
+      "bytes": 1121,
+      "reason": "retained model/dataset/capture data or qualification output; not source/configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/candidates",
+      "bytes": 84,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/exit-status",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/volume-create.log",
+      "bytes": 100,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/affected-vet.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/browser-concurrency.mk",
+      "bytes": 169,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/test.log",
+      "bytes": 308797,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/start",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/affected-race.log",
+      "bytes": 388,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/scratch-space",
+      "bytes": 168,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/sync.log",
+      "bytes": 69,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/cleanup.log",
+      "bytes": 112,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/finish",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/final-check.log",
+      "bytes": 1511,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/stage",
+      "bytes": 9,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/published",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/roadmap.log",
+      "bytes": 34,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/check.log",
+      "bytes": 1511,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/ports",
+      "bytes": 12,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/volume-attach.log",
+      "bytes": 294,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/build.log",
+      "bytes": 67200,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-runs.meinabdw/qualifier-unit.log",
+      "bytes": 103,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/candidates",
+      "bytes": 82,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/exit-status",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/volume-create.log",
+      "bytes": 107,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/affected-vet.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/browser-concurrency.mk",
+      "bytes": 169,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/test.log",
+      "bytes": 308807,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/start",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/affected-race.log",
+      "bytes": 394,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/scratch-space",
+      "bytes": 168,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/sync.log",
+      "bytes": 69,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/cleanup.log",
+      "bytes": 112,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/finish",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/final-check.log",
+      "bytes": 1517,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/stage",
+      "bytes": 9,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/published",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/roadmap.log",
+      "bytes": 34,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/check.log",
+      "bytes": 1517,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/ports",
+      "bytes": 12,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/volume-attach.log",
+      "bytes": 294,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/build.log",
+      "bytes": 67200,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-post-native.te1juope/qualifier-unit.log",
+      "bytes": 103,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/candidates",
+      "bytes": 207,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/exit-status",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/volume-create.log",
+      "bytes": 99,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/affected-vet.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/browser-concurrency.mk",
+      "bytes": 169,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/test.log",
+      "bytes": 308181,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/final-doc-check.log",
+      "bytes": 1510,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/start",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/affected-race.log",
+      "bytes": 394,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/scratch-space",
+      "bytes": 166,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/sync.log",
+      "bytes": 39,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/cleanup.log",
+      "bytes": 112,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/finish",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/stage",
+      "bytes": 9,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/roadmap.log",
+      "bytes": 34,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/check.log",
+      "bytes": 1510,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/ports",
+      "bytes": 12,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/volume-attach.log",
+      "bytes": 292,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/build.log",
+      "bytes": 67200,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-final.FGd2sR/qualifier-unit.log",
+      "bytes": 103,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/candidates",
+      "bytes": 295,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/cli-importers",
+      "bytes": 48,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/exit-status",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/cli-merge-test.log",
+      "bytes": 132,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/volume-create.log",
+      "bytes": 99,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/landed.json",
+      "bytes": 288,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/affected-vet.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/browser-concurrency.mk",
+      "bytes": 169,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/test.log",
+      "bytes": 308568,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/start",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/affected-race.log",
+      "bytes": 394,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/scratch-space",
+      "bytes": 166,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/cli-merge-vet.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/sync.log",
+      "bytes": 39,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/post-cli-head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/cleanup.log",
+      "bytes": 112,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/finish",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/stage",
+      "bytes": 9,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/roadmap.log",
+      "bytes": 34,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/check.log",
+      "bytes": 1511,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/cli-merge-check.log",
+      "bytes": 1511,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/cli-merge-race.log",
+      "bytes": 132,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/ports",
+      "bytes": 12,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/volume-attach.log",
+      "bytes": 292,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/build.log",
+      "bytes": 67200,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/qualifier-unit.log",
+      "bytes": 103,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112-merge.X08Bzz/cli-merge-build.log",
+      "bytes": 67200,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/latest-name.path",
+      "bytes": 70,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/current.path",
+      "bytes": 63,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/candidates",
+      "bytes": 138,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/reviewed-net-upstream-paths",
+      "bytes": 909,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/post-rebase-ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/exit-status",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-lock-busy.log",
+      "bytes": 222,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/volume-create.log",
+      "bytes": 99,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/post-volume-cleanup.log",
+      "bytes": 112,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/affected-vet.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/post-rebase-publication.log",
+      "bytes": 84,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/browser-concurrency.mk",
+      "bytes": 169,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-exit",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/test.log",
+      "bytes": 308684,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/post-rebase-resources.log",
+      "bytes": 149,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-lock-busy.log",
+      "bytes": 254,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/start",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/affected-race.log",
+      "bytes": 501,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/scratch-removed",
+      "bytes": 42,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/scratch-space",
+      "bytes": 168,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/new-upstream-paths",
+      "bytes": 1154,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/sync.log",
+      "bytes": 39,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/remote.path",
+      "bytes": 36,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-console.log",
+      "bytes": 357,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/cleanup.log",
+      "bytes": 112,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-lock-busy.exit",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/finish",
+      "bytes": 29,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/publication.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-lock-busy.exit",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/post-volume.log",
+      "bytes": 706,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/stage",
+      "bytes": 9,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/published",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/post-rebase-check.log",
+      "bytes": 1517,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/roadmap.log",
+      "bytes": 34,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/check.log",
+      "bytes": 1517,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-exit",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/lock-acquired",
+      "bytes": 6,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-console.log",
+      "bytes": 222,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/ports",
+      "bytes": 12,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/post-rebase-go-uncanonical-tmp.log",
+      "bytes": 8994,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/post-rebase-go.log",
+      "bytes": 2206,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/post-rebase-sync.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/post-rebase-build.log",
+      "bytes": 67200,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/volume-attach.log",
+      "bytes": 294,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/build.log",
+      "bytes": 67200,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/qualifier-unit.log",
+      "bytes": 103,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/removal-readback.log",
+      "bytes": 91,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/preflight.log",
+      "bytes": 149,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/repository.log",
+      "bytes": 7134,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/repository-build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/removed",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/http.log",
+      "bytes": 46566,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/http-build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/http.test",
+      "bytes": 42598560,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/postgres-server.log",
+      "bytes": 11869,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/stop.log",
+      "bytes": 120,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/completion.json",
+      "bytes": 193,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/proof.json",
+      "bytes": 248,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-postgres/repository.test",
+      "bytes": 13828256,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/local-overlay/overlay.json",
+      "bytes": 250,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/text-readback.json",
+      "bytes": 1314,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/essential-stderr.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/removal-readback.log",
+      "bytes": 91,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/text-readback.stderr",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/exit-status",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/readback-status",
+      "bytes": 4,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/cleanup-console.log",
+      "bytes": 222,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/repository.log",
+      "bytes": 7134,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/console.log",
+      "bytes": 405,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/essential-status",
+      "bytes": 2,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/remote.path",
+      "bytes": 45,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/removed",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/readback-stderr.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/http.log",
+      "bytes": 46566,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/evidence.tar.gz",
+      "bytes": 0,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/essential-evidence.tar.gz",
+      "bytes": 7582,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/completion.json",
+      "bytes": 201,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/proof.json",
+      "bytes": 446,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input.tar.gz",
+      "bytes": 53155310,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/pause-state.json",
+      "bytes": 1023,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small.tar.zst",
+      "bytes": 17863805,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-remote.path",
+      "bytes": 36,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/repository.log",
+      "bytes": 6536,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/audit-verify",
+      "bytes": 8418727,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/audit.log",
+      "bytes": 1437,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/http.log",
+      "bytes": 45260,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/audit.test",
+      "bytes": 17152915,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/http.test",
+      "bytes": 59562812,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/repository.test",
+      "bytes": 19378550,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/schema58-all/build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/audit-verify",
+      "bytes": 6205600,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/image",
+      "bytes": 9,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/audit.test",
+      "bytes": 12669088,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/http.test",
+      "bytes": 46776480,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/repository.test",
+      "bytes": 14659744,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small/build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-search-proof/applications.log",
+      "bytes": 6291,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-search-proof/applications-harness-first.log",
+      "bytes": 213,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-search-proof/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-search-proof/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-search-proof/search-postgres-server.log",
+      "bytes": 4020,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-search-proof/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-search-proof/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-search-proof/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-search-proof/native-search-build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-search-proof/proof.json",
+      "bytes": 11169,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/audit-verify",
+      "bytes": 9136398,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/image",
+      "bytes": 9,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/audit.test",
+      "bytes": 18263809,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/http.test",
+      "bytes": 64560754,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/repository.test",
+      "bytes": 20608090,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input/build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-final-19/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-final-19/repository.log",
+      "bytes": 3108,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-final-19/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-final-19/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-final-19/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-final-19/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-final-19/repository.test",
+      "bytes": 19378334,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-final-19/build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-guard-final/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-guard-final/repository.log",
+      "bytes": 2416,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-guard-final/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-guard-final/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-guard-final/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-guard-final/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-guard-final/repository.test",
+      "bytes": 19375703,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-guard-final/build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-atomic/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-atomic/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-atomic/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-atomic/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-atomic/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-atomic/http.log",
+      "bytes": 6755,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-atomic/http.test",
+      "bytes": 59559236,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-atomic/build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-core-proof/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-core-proof/repository.log",
+      "bytes": 6536,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-core-proof/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-core-proof/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-core-proof/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-core-proof/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-core-proof/repository-native-ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-core-proof/proof.json",
+      "bytes": 7454,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/source-base-head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/http-native-first.log",
+      "bytes": 38831,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-build-24c7.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/guarded-postgres-server.log",
+      "bytes": 4020,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/audit.log",
+      "bytes": 1437,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/http-native-isolated.log",
+      "bytes": 6755,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-audit-build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/compiler-image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/proof.json",
+      "bytes": 155309,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-1/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-1/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-1/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-1/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-1/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-1/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-1/http.log",
+      "bytes": 45327,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-1/postgres-server.log",
+      "bytes": 5107,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-2/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-2/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-2/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-2/head",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-2/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-2/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-2/http.log",
+      "bytes": 45326,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-final-proof/native-http-24c7-2/postgres-server.log",
+      "bytes": 5107,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-prototype/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-prototype/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-prototype/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-prototype/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-prototype/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-prototype/http.log",
+      "bytes": 6261,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-prototype/http.test",
+      "bytes": 59554519,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/guarded-http-prototype/build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-prototype/network-mode",
+      "bytes": 5,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-prototype/repository.log",
+      "bytes": 1725,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-prototype/ok",
+      "bytes": 41,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-prototype/image",
+      "bytes": 72,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-prototype/container",
+      "bytes": 65,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-prototype/postgres.log",
+      "bytes": 128,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-prototype/repository.test",
+      "bytes": 19371484,
+      "reason": "compiled/binary/archive output retained; source members projected separately where applicable"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/run-prototype/build.log",
+      "bytes": 0,
+      "reason": "temporary output, logs, identifiers, or other non-source material"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/entry-receipt.json",
+      "bytes": 15034,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/process-fd-receipt.json",
+      "bytes": 2425,
+      "reason": "runtime evidence/state output; not required source configuration"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/09-source.json",
+      "bytes": 1467,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/15-source.json",
+      "bytes": 3554,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/05-source.json",
+      "bytes": 8084,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/19-source.json",
+      "bytes": 2734,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/22-source.json",
+      "bytes": 6915,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/10-source.json",
+      "bytes": 5872,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/13-source.json",
+      "bytes": 8681,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/21-source.json",
+      "bytes": 2799,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/06-source.json",
+      "bytes": 4018,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/03-source.json",
+      "bytes": 5983,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/16-source.json",
+      "bytes": 8619,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/24-source.json",
+      "bytes": 3250,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/11-source.json",
+      "bytes": 8184,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/23-source.json",
+      "bytes": 3300,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/18-source.json",
+      "bytes": 8539,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/04-source.json",
+      "bytes": 5976,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/01-source.json",
+      "bytes": 5971,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/14-source.json",
+      "bytes": 7474,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/08-source.json",
+      "bytes": 5965,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/25-source.json",
+      "bytes": 6678,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/17-source.json",
+      "bytes": 8079,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/02-source.json",
+      "bytes": 5971,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/07-source.json",
+      "bytes": 3049,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/20-source.json",
+      "bytes": 6691,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-lock-handoff-20261113.7vcf_s__/original-wrapper-data/12-source.json",
+      "bytes": 8705,
+      "reason": "original base64 source container retained; decoded readable source is archived separately"
+    }
+  ],
+  "archives": [
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/models-rides-out-a-lost-an-7c06c-ped-connection-without-help-chromium/trace.zip",
+      "bytes": 304836,
+      "sha256": "b7e950ce86830258258461c57772dc5c998c0dda8b5154d38e3fe391822da5c4",
+      "source_members": [],
+      "bundle_members": [],
+      "status": "inspected",
+      "excluded_kind": "browser trace output"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/models-keeps-a-paused-uplo-203ac-me-settings-are-unavailable-chromium/trace.zip",
+      "bytes": 170526,
+      "sha256": "d79758c13f8c62f5a2a613fe8f50dc43d8886e95f7e01841b658d1d26af3f028",
+      "source_members": [],
+      "bundle_members": [],
+      "status": "inspected",
+      "excluded_kind": "browser trace output"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/models-retries-a-failed-mo-22f6a--returns-to-its-lineage-tab-chromium/trace.zip",
+      "bytes": 1071451,
+      "sha256": "22687221b0919e5fd8a62338650e5bbe05ad5bc0361b1247589a09267aad175a",
+      "source_members": [],
+      "bundle_members": [],
+      "status": "inspected",
+      "excluded_kind": "browser trace output"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/console-failures/navigation-what-a-person-o-6fbba-n-they-move-to-another-page-chromium/trace.zip",
+      "bytes": 96045,
+      "sha256": "ad7599a5f33afac3490632e222ca44f01ca873a6fb7b40bd643445d395db8d83",
+      "source_members": [],
+      "bundle_members": [],
+      "status": "inspected",
+      "excluded_kind": "browser trace output"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W/portal-failure/keyboard-keyboard-a-key-s--24cf0-s-reachable-and-shows-focus-chromium/trace.zip",
+      "bytes": 361331,
+      "sha256": "eef4cede5d1c78f80cf0cef844ee90dfa17204060320f2e94ac6fb7822488690",
+      "source_members": [],
+      "bundle_members": [],
+      "status": "inspected",
+      "excluded_kind": "browser trace output"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-input.tar.gz",
+      "bytes": 53155310,
+      "sha256": "009242f8165b661b30c2e7bbfeea243a8b5ab346ef5f524438f09c78b09cf74e",
+      "source_members": [
+        {
+          "member": "run-native.py",
+          "sha256": "4e03db4ecc8be30030afdca055fe2573ca950f76e83e9b9e328bc983faf8648c",
+          "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-input-tar-gz/run-native.py.source"
+        },
+        {
+          "member": "export.sql",
+          "sha256": "1342d9c23dce45d28540d0054c8613ed8a291abfee8b6ce81c1d7d4cc8b52877",
+          "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-input-tar-gz/export.sql.source"
+        },
+        {
+          "member": "execution-budget.sql",
+          "sha256": "10e347470827f48d8efb21e2ed3956d389ca5060c2cd2552192269500c428483",
+          "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-input-tar-gz/execution-budget.sql.source"
+        }
+      ],
+      "bundle_members": [],
+      "status": "inspected"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112.d9FvfA/native-small.tar.zst",
+      "bytes": 17863805,
+      "sha256": "988304f2e6e4f087f05d163ef843f439bd024e760e866ceae525940e11409444",
+      "source_members": [
+        {
+          "member": "run-native.py",
+          "sha256": "60cb9e8b9b9216ba5423aa414a546b9297214b53d35512a85d7f73738ada5aed",
+          "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-small-tar-zst/run-native.py.source"
+        },
+        {
+          "member": "export.sql",
+          "sha256": "1342d9c23dce45d28540d0054c8613ed8a291abfee8b6ce81c1d7d4cc8b52877",
+          "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-small-tar-zst/export.sql.source"
+        },
+        {
+          "member": "execution-budget.sql",
+          "sha256": "10e347470827f48d8efb21e2ed3956d389ca5060c2cd2552192269500c428483",
+          "archive_path": "tools/dev/app-migration-archive/sources/archive-members/app-runs/20261112.d9fvfa/native-small-tar-zst/execution-budget.sql.source"
+        }
+      ],
+      "bundle_members": [],
+      "status": "inspected",
+      "decompress_exit": 0
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/evidence.tar.gz",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_members": [],
+      "bundle_members": [],
+      "status": "empty or non-source archive output retained"
+    },
+    {
+      "path": "/Users/passion./.local/state/ownsolid/app-runs/20261112-name.qcmegxse/native-schema59/essential-evidence.tar.gz",
+      "bytes": 7582,
+      "sha256": "21ae82d5d11017906b66467672f2d0725ee58fc3c532c9ae69f131c835c8945b",
+      "source_members": [],
+      "bundle_members": [],
+      "status": "inspected"
+    }
+  ],
+  "git_bundles": [],
+  "embedded_script_binary_payloads": [],
+  "source_review_concerns": [],
+  "build_status": "NOTRUN",
+  "build_reason": "Fresh raw Free below 6 GiB; no gate opened and no threshold lowered",
+  "originals_preserved": true,
+  "readable_projection_policy": "Complete UTF-8 source bytes, no executable permission; original archives and containers remain untouched"
+}

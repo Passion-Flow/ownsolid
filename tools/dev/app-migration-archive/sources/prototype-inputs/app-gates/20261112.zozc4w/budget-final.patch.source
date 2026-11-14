@@ -1,0 +1,1319 @@
+diff --git a/docs/decisions/0069-retain-assistant-reservations-until-usage-is-known.md b/docs/decisions/0069-retain-assistant-reservations-until-usage-is-known.md
+new file mode 100644
+index 00000000..7dda776d
+--- /dev/null
++++ b/docs/decisions/0069-retain-assistant-reservations-until-usage-is-known.md
+@@ -0,0 +1,47 @@
++# Retain assistant reservations until usage is known
++
++Status: accepted for the staged PostgreSQL execution-budget component.
++
++## Context
++
++AGT-112 needs user and installation budgets that survive replicas and
++process restart. The assistant currently has deterministic commands and an
++installation execution policy, but no authoritative user allowance, model
++execution route or registered budget schema. Historical workspace cost
++reports cannot atomically admit concurrent assistant work.
++
++## Decision
++
++Reserve one execution and its finite worst-case token charge on both scopes
++in one borrowed PostgreSQL transaction. Recheck the current session and
++workspace before consulting a trusted policy source. Bind the reservation
++UUID to the exact execution digest, maximum charge and authenticated scope.
++Lock the reservation, installation counter and user counter in that order.
++Policy revisions reuse the same window counters.
++
++Only a newly committed reservation permits one execution. A held replay is
++pending and a settled replay is complete; neither grants another execution.
++An unknown commit returns no reservation. Reconcile the original UUID
++instead of retrying under a new identity.
++
++Keep a hold through timeout, cancellation, restart and window expiry.
++Settlement requires the original current authority, bounded actual usage
++and a stable digest of the trusted gateway receipt. Refund only unused
++tokens, once. Keep the admitted execution charged. Do not infer a refund
++from a missing reply, failed connection or model-generated usage.
++
++## Consequences
++
++A failed or uncertain execution can retain conservative capacity. Operator
++reconciliation needs its own authorized, audited contract; it cannot be an
++automatic time-based refund. An installation counter serializes writes to
++its current window, which is necessary for the first exact shared ceiling.
++
++The component introduces no alternative policy store or default allowance.
++Its DDL remains an isolated fixture input until the persistence owner adds
++a forward migration and restore catalogue. The gateway adapter must prove
++its maximum charge before admission. Human confirmation, effect permissions
++and success auditing remain the action owner's responsibilities. Loop
++limits, production binding, telemetry, controls and browser flows remain
++open in AGT-112. See the
++[research and verification contract](../research/product-assistant-execution-budgets.md).
+diff --git a/docs/research/product-assistant-execution-budgets.md b/docs/research/product-assistant-execution-budgets.md
+new file mode 100644
+index 00000000..448a7e89
+--- /dev/null
++++ b/docs/research/product-assistant-execution-budgets.md
+@@ -0,0 +1,143 @@
++# Durable product assistant execution budgets (AGT-112)
++
++Reviewed: 2026-11-12. This is an implementation contract for the owned
++reservation boundary. Production configuration, route binding, loop limits
++and browser acceptance remain open. No policy is inferred from model output.
++
++## Sources and licences
++
++[Kubernetes resource quotas](https://kubernetes.io/docs/concepts/policy/resource-quotas/)
++apply aggregate limits when admitting work. Retrospective usage reports do
++not substitute for admission. The existing ownsolid metering budget preview
++reserves no capacity and has workspace, rather than user, scope.
++
++[PostgreSQL row locks](https://www.postgresql.org/docs/18/explicit-locking.html#LOCKING-ROWS)
++last until transaction completion. A waiting writer reads the updated row
++after its predecessor commits under
++[Read Committed](https://www.postgresql.org/docs/18/transaction-iso.html#XACT-READ-COMMITTED).
++[INSERT ON CONFLICT](https://www.postgresql.org/docs/18/sql-insert.html)
++establishes a unique reservation before charging either counter. Lock every
++reservation first, then installation and user counters in that fixed order.
++
++[LangGraph persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
++uses persistent checkpoints for interruption and recovery. Its in-memory
++checkpointer loses state on restart. Budget reservations must likewise
++outlive the process admitting an action. A checkpoint alone cannot establish
++whether a remote effect happened after a lost reply.
++
++No dependency, model or dataset is added. The code reuses Go's
++[BSD-style standard library](https://go.dev/LICENSE), existing
++[pgx v5.11.0](https://github.com/jackc/pgx/blob/v5.11.0/LICENSE) under MIT,
++and [google/uuid v1.6.0](https://github.com/google/uuid/blob/v1.6.0/LICENSE)
++under BSD-3-Clause. The fixture reuses
++[PostgreSQL](https://www.postgresql.org/about/licence/) and
++[pgvector v0.8.7](https://github.com/pgvector/pgvector/blob/v0.8.7/LICENSE)
++under the PostgreSQL License. These terms permit commercial use, offline
++use and redistribution with applicable notices. LangGraph is a comparison,
++not a runtime dependency. Fixture identities and requests are synthetic.
++
++## Contract
++
++The command service's current installation policy remains the first
++execution gate. A separate trusted policy source must supply an explicit
++user enable decision, a stable UTC budget window, and finite installation
++and user ceilings for admitted executions and model tokens. An absent,
++unreadable or invalid policy is unavailable. Explicit user denial is forbidden.
++A zero ceiling means zero capacity, never unlimited capacity. No defaults,
++environment parser or second configuration store are introduced here.
++
++Recheck the real session and workspace in the owning transaction before
++reading policy or touching a reservation. Derive tenant, user and workspace
++from those server authorities. The browser and model cannot choose them.
++User counters span both entrances, tenants and every workspace for the same
++global user UUID; installation counters span the database. The trusted source
++must supply the same user ceiling for that UUID and window. Policy revisions do not reset
++usage. The policy owner must keep window boundaries stable across replicas
++and configuration changes. Use the database clock after acquiring counter
++locks to reject an expired or future window.
++
++A trusted adapter supplies a server-issued reservation UUID, a digest of
++the exact bounded execution, and its maximum total model-token charge.
++Deterministic commands may reserve zero tokens. One newly admitted
++execution permanently consumes one execution unit and holds the maximum
++tokens in both counters atomically. Check by subtraction to avoid signed
++integer overflow. Any refusal rolls back the new reservation and both
++counters. There is no tool execution inside this storage transaction.
++
++A repeated UUID with the same subject, entrance, workspace, digest and
++maximum charge returns the durable state without charging again. A
++different binding conflicts. Only a newly committed reservation permits
++the adapter to start one execution. A held replay is pending, not another
++permission to execute. A settled replay is already complete. A missing or
++failed commit response permits no execution; reconcile the same UUID.
++
++Settlement accepts only trusted, bounded actual usage and the digest of
++the authenticated gateway receipt. It changes held to settled once,
++returns unused tokens to both original windows, and keeps the execution
++unit charged. Repeating the same usage and receipt is idempotent; changed
++usage or receipt conflicts. Require the original authenticated scope for
++settlement. Revocation can leave a conservative hold; it cannot grant a
++refund. There is no automatic release on cancellation, timeout, restart,
++window expiry or missing usage. A new policy window cannot move an old hold.
++
++The reservation is internal admission state, not an executed product action
++and not a success audit. Existing action transactions still own permission,
++confirmation, effects and assistant audit attribution. Reservation admission
++does not authorize a write or replace its signed plan and human confirmation.
++Reserve an effect only after its required human confirmation has been verified;
++planning inference is a separate bounded read execution. An approval pause must
++not become an automatic effect merely because a reservation exists.
++
++## Alternatives rejected
++
++- Process-local counters cannot coordinate replicas or survive restart.
++- Counting audit events or historical cost reports races concurrent work
++  and cannot hold the worst-case charge before inference.
++- Blindly retrying after an unknown commit can start an effect twice.
++- Expiring a hold by time can refund work that completed without a reply.
++- Resetting usage on policy revision lets configuration changes bypass a
++  still-active window. Changing ceilings must reuse the same counters.
++- A new assistant-owned policy table or default allowance would compete
++  with the configuration owner's missing authoritative source.
++
++## Verification requirements
++
++Use real disconnected PostgreSQL transactions through independent service
++instances. Concurrent requests must never exceed either ceiling, including
++two different users sharing the installation ceiling. A denied request
++must leave no reservation, counter change, tool effect or success audit.
++Verify duplicate races, changed bindings, zero capacity, exact capacity,
++integer bounds, expired windows, cancellation while locked, transaction
++rollback, and a lost commit reply. Reopen state through a new instance and
++verify a held replay cannot execute again. Verify settlement races and
++changed receipts, and preserve the original window across policy rollover.
++Exercise revoked sessions and workspace, user and tenant isolation. Missing
++candidate schema must fail closed. The candidate DDL is fixture-owned until
++the persistence owner registers a forward migration and restore catalogue.
++
++The public endpoint, production migration, trusted policy source, gateway
++usage binding, run-loop bounds, operator controls and both browser entrances
++are separate integration requirements. AGT-112 remains unchecked until
++those complete the main flow and offline acceptance.
++
++## Integration surface
++
++`productagent.NewExecutionBudgets(commands, policySource)` borrows the
++existing command service and accepts no pool configuration. `Reserve`
++takes the server-authenticated actor and a `BudgetExecution`; `Settle`
++takes the same scope and a `BudgetSettlement`. The trusted adapter alone
++constructs execution and canonical receipt digests and token bounds. Do not
++expose these methods as an endpoint taking those values from a caller.
++
++The boundary uses existing public error codes: `RATE_LIMITED` (429),
++`ACCESS_DENIED` (403), `SERVICE_NOT_READY` and sanitized storage errors
++(503), `IDEMPOTENCY_CONFLICT` (409), `RESOURCE_NOT_FOUND` (404), and
++`VALIDATION_FAILED` (400). Scope mismatch does not disclose an existing
++reservation. Commit uncertainty preserves the existing transaction outcome
++and returns no newly admitted result. The generic HTTP rate fallback is not
++a promise that capacity will be available after that time.
++
++The [decision](../decisions/0069-retain-assistant-reservations-until-usage-is-known.md)
++records conservative recovery. Production registration must pair a forward
++migration and restore catalogue with the trusted policy and bounded adapter;
++creating the schema alone does not enable the gate or complete the feature.
+diff --git a/services/control/internal/modules/productagent/README.md b/services/control/internal/modules/productagent/README.md
+index 2ebb3fe9..c84992de 100644
+--- a/services/control/internal/modules/productagent/README.md
++++ b/services/control/internal/modules/productagent/README.md
+@@ -52,6 +52,40 @@ qualification still requires a live authenticated gateway route and
+ positive capability evidence. See the
+ [replay instructions and acceptance](../../../../../docs/research/product-assistant-model-qualification.md).
+ 
++## Execution budget reservation candidate
++
++`NewExecutionBudgets` borrows this service's current session, workspace and
++installation policy. Its separate trusted policy source supplies an explicit
++user decision, stable window and finite execution and token ceilings.
++`Reserve` charges installation and global-user counters atomically on
++PostgreSQL. Only a successfully committed `BudgetNew` permits the trusted
++adapter to start work. `BudgetHeld` means work may already have started;
++reconcile it rather than executing again. An error returns no reservation,
++including when the commit outcome is unknown.
++
++`Settle` needs the original authenticated scope and trusted usage receipt.
++It returns unused tokens once, keeps the execution charged and binds retries
++to the same usage and receipt digest. Timeouts and restarts retain holds.
++Neither method performs a product action or substitutes for the action's
++permissions, success audit or human confirmation.
++
++The [candidate DDL](testdata/execution-budget.sql) is installed only by the
++isolated repository test. It is not a production migration. Current command
++routes do not bind this budget candidate. A production migration and restore
++catalogue, authoritative typed policy source, bounded gateway adapter,
++run-loop guard, telemetry and both browser flows must be integrated before
++AGT-112 can ship. Do not accept a browser's or model's maximum token estimate.
++See the [contract and acceptance](../../../../../docs/research/product-assistant-execution-budgets.md).
++
++With the protected PostgreSQL repository fixture inputs selected as described
++below, run:
++
++```sh
++GOPROXY=off GOSUMDB=off go -C services/control test -p=1 \
++  -tags repository_integration -run '^TestDurableExecutionBudgets$' \
++  ./internal/modules/productagent -count=1
++```
++
+ ## Tests
+ 
+ ```sh
+diff --git a/services/control/internal/modules/productagent/execution_budget.go b/services/control/internal/modules/productagent/execution_budget.go
+new file mode 100644
+index 00000000..1d38d270
+--- /dev/null
++++ b/services/control/internal/modules/productagent/execution_budget.go
+@@ -0,0 +1,197 @@
++package productagent
++
++import (
++	"context"
++	"errors"
++	"time"
++
++	wire "github.com/Passion-Flow/ownsolid/api/datasets/v1"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++// BudgetAccess is an explicit trusted user policy, separate from installation policy.
++type BudgetAccess string
++
++const (
++	// BudgetAccessEnabled permits checking this user's finite allowance.
++	BudgetAccessEnabled BudgetAccess = "enabled"
++	// BudgetAccessDisabled denies admission regardless of remaining allowance.
++	BudgetAccessDisabled BudgetAccess = "disabled"
++)
++
++// BudgetCeiling bounds admitted executions and their total model tokens in one window.
++// Zero is zero capacity. There is no unlimited sentinel.
++type BudgetCeiling struct {
++	Executions int64
++	Tokens     int64
++}
++
++// ExecutionBudgetPolicy comes from the installation's trusted policy owner.
++// Window boundaries must remain stable across replicas and policy revisions.
++type ExecutionBudgetPolicy struct {
++	UserAccess   BudgetAccess
++	WindowStart  time.Time
++	WindowEnd    time.Time
++	Installation BudgetCeiling
++	User         BudgetCeiling
++}
++
++// BudgetSubject is resolved from current server authority before policy is read.
++type BudgetSubject struct {
++	TenantID, UserID, WorkspaceID, Audience string
++}
++
++// ExecutionBudgetPolicySource reads a complete local policy on the supplied
++// transaction, honors cancellation, and returns an error for an absent decision.
++type ExecutionBudgetPolicySource func(context.Context, transaction.Executor, BudgetSubject) (ExecutionBudgetPolicy, error)
++
++// BudgetExecution binds a server-issued UUID to one exact, bounded execution.
++// ExecutionSHA256 hashes the trusted adapter's canonical action, not model prose.
++type BudgetExecution struct {
++	ID              string
++	ExecutionSHA256 string
++	MaximumTokens   int64
++}
++
++// BudgetReservationState describes durable admission without authorizing a replay.
++type BudgetReservationState string
++
++const (
++	// BudgetNew permits one execution only after Reserve has committed successfully.
++	BudgetNew BudgetReservationState = "new"
++	// BudgetHeld means the execution may already have started; never execute it again.
++	BudgetHeld BudgetReservationState = "held"
++	// BudgetSettled means trusted usage has already settled this execution.
++	BudgetSettled BudgetReservationState = "settled"
++)
++
++// BudgetReservation is empty on every failed or uncertain transaction outcome.
++type BudgetReservation struct {
++	ID    string
++	State BudgetReservationState
++}
++
++// BudgetSettlement carries usage from an authenticated, trusted gateway receipt.
++// It must not be populated directly from browser input or model-generated text.
++type BudgetSettlement struct {
++	ID            string
++	ActualTokens  int64
++	ReceiptSHA256 string
++}
++
++// ErrBudgetExceeded means one of the current finite ceilings has no capacity.
++var ErrBudgetExceeded = errors.New("RATE_LIMITED")
++
++// ExecutionBudgets reserves shared PostgreSQL capacity using current session and
++// workspace authority. It owns neither connection configuration nor policy storage.
++// Production adapters must commit a new reservation before starting any work.
++type ExecutionBudgets struct {
++	commands *Service
++	policy   ExecutionBudgetPolicySource
++}
++
++// NewExecutionBudgets binds a reservation boundary to the existing command
++// service. A nil policy source makes admission unavailable; it never defaults on.
++func NewExecutionBudgets(commands *Service, policy ExecutionBudgetPolicySource) (*ExecutionBudgets, error) {
++	if commands == nil || commands.identity == nil || commands.applications == nil ||
++		commands.applications.Workspaces == nil || commands.applications.Workspaces.Identity != commands.identity {
++		return nil, errExecutionPolicyUnavailable
++	}
++	return &ExecutionBudgets{commands: commands, policy: policy}, nil
++}
++
++// Reserve rechecks current authority and atomically charges both finite ceilings.
++// Only BudgetNew allows the trusted adapter to start one execution. A held replay
++// or unknown commit must be reconciled using the original ID, never re-executed.
++// The action owner must verify its risk policy and required human confirmation
++// before reserving an effect; this boundary supplies no action authorization.
++func (b *ExecutionBudgets) Reserve(ctx context.Context, actor identity.Auth, execution BudgetExecution) (BudgetReservation, error) {
++	if !wire.ValidID(execution.ID) || !budgetDigest(execution.ExecutionSHA256) || execution.MaximumTokens < 0 {
++		return BudgetReservation{}, errors.New("VALIDATION_FAILED")
++	}
++	var result BudgetReservation
++	err := b.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
++		if err := b.commands.admitExecution(ctx); err != nil {
++			return err
++		}
++		if b.policy == nil {
++			return errExecutionPolicyUnavailable
++		}
++		policy, err := b.policy(ctx, tx, subject)
++		if err != nil {
++			return errExecutionPolicyUnavailable
++		}
++		if policy.UserAccess == BudgetAccessDisabled {
++			return ErrCommandDenied
++		}
++		if !validBudgetPolicy(policy) {
++			return errExecutionPolicyUnavailable
++		}
++		result, err = reserveBudgetWithin(ctx, tx, subject, execution, policy)
++		return err
++	})
++	if err != nil {
++		return BudgetReservation{}, err
++	}
++	return result, nil
++}
++
++// Settle returns unused held tokens exactly once while keeping the execution
++// unit charged. Disablement does not prevent settlement of known usage. Missing
++// usage, cancellation and process restart never release a hold automatically.
++func (b *ExecutionBudgets) Settle(ctx context.Context, actor identity.Auth, settlement BudgetSettlement) (BudgetReservation, error) {
++	if !wire.ValidID(settlement.ID) || !budgetDigest(settlement.ReceiptSHA256) || settlement.ActualTokens < 0 {
++		return BudgetReservation{}, errors.New("VALIDATION_FAILED")
++	}
++	var result BudgetReservation
++	err := b.withSubject(ctx, actor, func(ctx context.Context, tx transaction.Executor, subject BudgetSubject) error {
++		var err error
++		result, err = settleBudgetWithin(ctx, tx, subject, settlement)
++		return err
++	})
++	if err != nil {
++		return BudgetReservation{}, err
++	}
++	return result, nil
++}
++
++func (b *ExecutionBudgets) withSubject(ctx context.Context, actor identity.Auth, fn func(context.Context, transaction.Executor, BudgetSubject) error) error {
++	if b == nil || b.commands == nil || ctx == nil || actor.Me.Workspace == nil ||
++		actor.Me.Audience != "admin" && actor.Me.Audience != "portal" {
++		return ErrCommandDenied
++	}
++	return b.commands.withSession(ctx, actor, func(ctx context.Context, tx transaction.Executor) error {
++		if tx.Dialect() != transaction.PostgreSQL {
++			return errExecutionPolicyUnavailable
++		}
++		w, err := b.commands.applications.Workspaces.ReadScopeWithin(ctx, tx, actor, actor.Me.Workspace.ID)
++		if err != nil {
++			return err
++		}
++		return fn(ctx, tx, BudgetSubject{TenantID: w.TenantID, UserID: actor.Me.User.ID, WorkspaceID: w.ID, Audience: actor.Me.Audience})
++	})
++}
++
++func validBudgetPolicy(p ExecutionBudgetPolicy) bool {
++	return p.UserAccess == BudgetAccessEnabled && !p.WindowStart.IsZero() && p.WindowStart.Before(p.WindowEnd) &&
++		p.WindowStart.Equal(p.WindowStart.Truncate(time.Microsecond)) && p.WindowEnd.Equal(p.WindowEnd.Truncate(time.Microsecond)) &&
++		p.Installation.Executions >= 0 && p.Installation.Tokens >= 0 && p.User.Executions >= 0 && p.User.Tokens >= 0
++}
++
++func budgetDigest(s string) bool {
++	if len(s) != 64 {
++		return false
++	}
++	for _, c := range s {
++		if !(c >= '0' && c <= '9' || c >= 'a' && c <= 'f') {
++			return false
++		}
++	}
++	return true
++}
++
++func budgetFits(used BudgetCeiling, ceiling BudgetCeiling, tokens int64) bool {
++	return used.Executions >= 0 && used.Tokens >= 0 && tokens >= 0 && used.Executions < ceiling.Executions &&
++		used.Tokens <= ceiling.Tokens && tokens <= ceiling.Tokens-used.Tokens
++}
+diff --git a/services/control/internal/modules/productagent/execution_budget_repository.go b/services/control/internal/modules/productagent/execution_budget_repository.go
+new file mode 100644
+index 00000000..c1ca1fb2
+--- /dev/null
++++ b/services/control/internal/modules/productagent/execution_budget_repository.go
+@@ -0,0 +1,158 @@
++package productagent
++
++import (
++	"context"
++	"database/sql"
++	"errors"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++)
++
++type budgetWindow struct{ start, end time.Time }
++
++type storedBudgetReservation struct {
++	execution BudgetExecution
++	window    budgetWindow
++	state     BudgetReservationState
++	actual    sql.NullInt64
++	receipt   sql.NullString
++}
++
++func budgetSQL(query string, args ...any) transaction.Statement {
++	return transaction.SQL(transaction.PostgreSQL, query, args...)
++}
++
++func reserveBudgetWithin(ctx context.Context, tx transaction.Executor, subject BudgetSubject, execution BudgetExecution, policy ExecutionBudgetPolicy) (BudgetReservation, error) {
++	n, err := tx.Exec(ctx, budgetSQL(`INSERT INTO product_agent_budget_reservations
++		(id,tenant_id,user_id,workspace_id,audience,execution_sha256,maximum_tokens,window_start,window_end,state)
++		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'held') ON CONFLICT(id) DO NOTHING`,
++		execution.ID, subject.TenantID, subject.UserID, subject.WorkspaceID, subject.Audience,
++		execution.ExecutionSHA256, execution.MaximumTokens, policy.WindowStart, policy.WindowEnd))
++	if err != nil {
++		return BudgetReservation{}, err
++	}
++	if n == 0 {
++		stored, err := readBudgetReservation(ctx, tx, subject, execution.ID)
++		if err != nil {
++			return BudgetReservation{}, err
++		}
++		if stored.execution != execution {
++			return BudgetReservation{}, errors.New("IDEMPOTENCY_CONFLICT")
++		}
++		return BudgetReservation{ID: execution.ID, State: stored.state}, nil
++	}
++	w := budgetWindow{policy.WindowStart, policy.WindowEnd}
++	used, err := lockBudgetCounters(ctx, tx, subject, w, true)
++	if err != nil {
++		return BudgetReservation{}, err
++	}
++	var current bool
++	if err := tx.QueryRow(ctx, budgetSQL(`SELECT $1::timestamptz <= statement_timestamp() AND statement_timestamp() < $2::timestamptz`, w.start, w.end)).Scan(&current); err != nil {
++		return BudgetReservation{}, err
++	}
++	if !current {
++		return BudgetReservation{}, errExecutionPolicyUnavailable
++	}
++	if !budgetFits(used[0], policy.Installation, execution.MaximumTokens) || !budgetFits(used[1], policy.User, execution.MaximumTokens) {
++		return BudgetReservation{}, ErrBudgetExceeded
++	}
++	if err := changeBudgetCounters(ctx, tx, subject, w, 1, execution.MaximumTokens); err != nil {
++		return BudgetReservation{}, err
++	}
++	return BudgetReservation{ID: execution.ID, State: BudgetNew}, nil
++}
++
++func readBudgetReservation(ctx context.Context, tx transaction.Executor, subject BudgetSubject, id string) (storedBudgetReservation, error) {
++	var stored storedBudgetReservation
++	stored.execution.ID = id
++	err := tx.QueryRow(ctx, budgetSQL(`SELECT execution_sha256,maximum_tokens,window_start,window_end,state,actual_tokens,receipt_sha256
++		FROM product_agent_budget_reservations WHERE id=$1 AND tenant_id=$2 AND user_id=$3 AND workspace_id=$4 AND audience=$5 FOR UPDATE`,
++		id, subject.TenantID, subject.UserID, subject.WorkspaceID, subject.Audience)).Scan(
++		&stored.execution.ExecutionSHA256, &stored.execution.MaximumTokens, &stored.window.start, &stored.window.end,
++		&stored.state, &stored.actual, &stored.receipt)
++	if errors.Is(err, sql.ErrNoRows) {
++		return storedBudgetReservation{}, errors.New("RESOURCE_NOT_FOUND")
++	}
++	return stored, err
++}
++
++func settleBudgetWithin(ctx context.Context, tx transaction.Executor, subject BudgetSubject, settlement BudgetSettlement) (BudgetReservation, error) {
++	stored, err := readBudgetReservation(ctx, tx, subject, settlement.ID)
++	if err != nil {
++		return BudgetReservation{}, err
++	}
++	if settlement.ActualTokens > stored.execution.MaximumTokens {
++		return BudgetReservation{}, errors.New("VALIDATION_FAILED")
++	}
++	result := BudgetReservation{ID: settlement.ID, State: BudgetSettled}
++	if stored.state == BudgetSettled {
++		if !stored.actual.Valid || !stored.receipt.Valid || stored.actual.Int64 != settlement.ActualTokens || stored.receipt.String != settlement.ReceiptSHA256 {
++			return BudgetReservation{}, errors.New("IDEMPOTENCY_CONFLICT")
++		}
++		return result, nil
++	}
++	if stored.state != BudgetHeld || stored.actual.Valid || stored.receipt.Valid {
++		return BudgetReservation{}, errExecutionPolicyUnavailable
++	}
++	used, err := lockBudgetCounters(ctx, tx, subject, stored.window, false)
++	if err != nil {
++		return BudgetReservation{}, err
++	}
++	for _, counter := range used {
++		if counter.Executions < 1 || counter.Tokens < stored.execution.MaximumTokens {
++			return BudgetReservation{}, errExecutionPolicyUnavailable
++		}
++	}
++	// Keep the execution charged even when the gateway proved zero token usage.
++	if err := changeBudgetCounters(ctx, tx, subject, stored.window, 0, settlement.ActualTokens-stored.execution.MaximumTokens); err != nil {
++		return BudgetReservation{}, err
++	}
++	n, err := tx.Exec(ctx, budgetSQL(`UPDATE product_agent_budget_reservations SET state='settled',actual_tokens=$2,receipt_sha256=$3
++		WHERE id=$1 AND state='held'`, settlement.ID, settlement.ActualTokens, settlement.ReceiptSHA256))
++	if err != nil {
++		return BudgetReservation{}, err
++	}
++	if n != 1 {
++		return BudgetReservation{}, errExecutionPolicyUnavailable
++	}
++	return result, nil
++}
++
++// The fixed installation-before-user order is shared by admission and settlement.
++func lockBudgetCounters(ctx context.Context, tx transaction.Executor, subject BudgetSubject, w budgetWindow, create bool) ([2]BudgetCeiling, error) {
++	var used [2]BudgetCeiling
++	for i := range used {
++		insert := budgetSQL(`INSERT INTO product_agent_budget_installations(window_start,window_end) VALUES($1,$2) ON CONFLICT DO NOTHING`, w.start, w.end)
++		read := budgetSQL(`SELECT executions,tokens FROM product_agent_budget_installations WHERE window_start=$1 AND window_end=$2 FOR UPDATE`, w.start, w.end)
++		if i == 1 {
++			insert = budgetSQL(`INSERT INTO product_agent_budget_users(user_id,window_start,window_end) VALUES($1,$2,$3) ON CONFLICT DO NOTHING`, subject.UserID, w.start, w.end)
++			read = budgetSQL(`SELECT executions,tokens FROM product_agent_budget_users WHERE user_id=$1 AND window_start=$2 AND window_end=$3 FOR UPDATE`, subject.UserID, w.start, w.end)
++		}
++		if create {
++			if _, err := tx.Exec(ctx, insert); err != nil {
++				return [2]BudgetCeiling{}, err
++			}
++		}
++		if err := tx.QueryRow(ctx, read).Scan(&used[i].Executions, &used[i].Tokens); err != nil {
++			return [2]BudgetCeiling{}, err
++		}
++	}
++	return used, nil
++}
++
++func changeBudgetCounters(ctx context.Context, tx transaction.Executor, subject BudgetSubject, w budgetWindow, executions, tokens int64) error {
++	for _, query := range []transaction.Statement{
++		budgetSQL(`UPDATE product_agent_budget_installations SET executions=executions+$3,tokens=tokens+$4 WHERE window_start=$1 AND window_end=$2`, w.start, w.end, executions, tokens),
++		budgetSQL(`UPDATE product_agent_budget_users SET executions=executions+$4,tokens=tokens+$5 WHERE user_id=$1 AND window_start=$2 AND window_end=$3`, subject.UserID, w.start, w.end, executions, tokens),
++	} {
++		n, err := tx.Exec(ctx, query)
++		if err != nil {
++			return err
++		}
++		if n != 1 {
++			return errExecutionPolicyUnavailable
++		}
++	}
++	return nil
++}
+diff --git a/services/control/internal/modules/productagent/execution_budget_repository_integration_test.go b/services/control/internal/modules/productagent/execution_budget_repository_integration_test.go
+new file mode 100644
+index 00000000..2905b609
+--- /dev/null
++++ b/services/control/internal/modules/productagent/execution_budget_repository_integration_test.go
+@@ -0,0 +1,540 @@
++//go:build repository_integration
++
++package productagent
++
++import (
++	"context"
++	_ "embed"
++	"errors"
++	"math"
++	"strings"
++	"sync"
++	"sync/atomic"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/applications"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/workspaces"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/platform/database/transaction"
++	"github.com/Passion-Flow/ownsolid/services/control/internal/testing/repositoryfixture"
++	"github.com/google/uuid"
++	"github.com/jackc/pgx/v5/pgxpool"
++)
++
++//go:embed testdata/execution-budget.sql
++var executionBudgetSchema string
++
++type budgetRepositoryFixture struct {
++	t           *testing.T
++	f           repositoryfixture.Fixture
++	ctx         context.Context
++	policy      atomic.Pointer[ExecutionBudgetPolicy]
++	actors      [3]identity.Auth
++	gates       [2]*ExecutionBudgets
++	replicaPool *pgxpool.Pool
++}
++
++func newBudgetRepositoryFixture(t *testing.T) *budgetRepositoryFixture {
++	t.Helper()
++	f := repositoryfixture.New(t)
++	if f.PostgreSQL == nil {
++		t.Skip("Durable assistant reservations require PostgreSQL")
++	}
++	ctx, cancel := context.WithTimeout(t.Context(), 120*time.Second)
++	t.Cleanup(cancel)
++	g := &budgetRepositoryFixture{t: t, f: f, ctx: ctx}
++	if _, err := f.PostgreSQL.Exec(ctx, executionBudgetSchema); err != nil {
++		t.Fatal(err)
++	}
++	owner := &identity.Service{Storage: f.Store}
++	for i, audience := range []string{"admin", "portal", "portal"} {
++		user := f.User
++		if i == 2 {
++			user = uuid.NewString()
++			email := user + "@example.invalid"
++			g.exec(`INSERT INTO users(id,email_canonical,email_display,display_name,locale,status,is_platform_admin) VALUES($1,$2,$2,'Budget second user','en','active',false)`, user, email)
++		}
++		if i != 1 {
++			g.exec(`INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role,authority_id) VALUES($1,$2,$3,'owner',$4)`, user, f.Tenant, f.Workspace, uuid.NewString())
++		}
++		var issued identity.IssuedSession
++		if err := f.Store.Within(ctx, false, func(ctx context.Context, tx transaction.Executor) error {
++			var err error
++			issued, err = owner.IssueSessionWithin(ctx, tx, user, 1, audience, "", uuid.NewString(), nil)
++			return err
++		}); err != nil {
++			t.Fatal(err)
++		}
++		actor, err := owner.Authenticate(ctx, issued.Token, audience)
++		if err != nil || actor.Me.Workspace == nil || actor.Me.Workspace.ID != f.Workspace {
++			t.Fatalf("budget fixture authentication: %v", err)
++		}
++		g.actors[i] = actor
++	}
++	config := f.PostgreSQL.Config()
++	config.ConnConfig.RuntimeParams["application_name"] = "assistant-budget-" + uuid.NewString()
++	pool, err := pgxpool.NewWithConfig(ctx, config)
++	if err != nil {
++		t.Fatal(err)
++	}
++	t.Cleanup(pool.Close)
++	g.replicaPool = pool
++	replica, err := transaction.FromPostgreSQL(pool)
++	if err != nil {
++		t.Fatal(err)
++	}
++	g.gates[0] = g.gate(f.Store)
++	g.gates[1] = g.gate(replica)
++	g.reset(t)
++	return g
++}
++
++func (g *budgetRepositoryFixture) gate(store transaction.Store) *ExecutionBudgets {
++	g.t.Helper()
++	owner := &identity.Service{Storage: store}
++	apps := &applications.Service{Identity: owner, Workspaces: &workspaces.Service{Identity: owner}}
++	commands, err := New(apps, func(context.Context) (bool, error) { return true, nil })
++	if err != nil {
++		g.t.Fatal(err)
++	}
++	gate, err := NewExecutionBudgets(commands, func(context.Context, transaction.Executor, BudgetSubject) (ExecutionBudgetPolicy, error) {
++		return *g.policy.Load(), nil
++	})
++	if err != nil {
++		g.t.Fatal(err)
++	}
++	return gate
++}
++
++func (g *budgetRepositoryFixture) exec(query string, args ...any) {
++	g.t.Helper()
++	if _, err := g.f.PostgreSQL.Exec(g.ctx, query, args...); err != nil {
++		g.t.Fatal(err)
++	}
++}
++
++func (g *budgetRepositoryFixture) reset(t *testing.T) {
++	g.t = t
++	g.t.Helper()
++	g.exec(`TRUNCATE product_agent_budget_reservations,product_agent_budget_users,product_agent_budget_installations`)
++	start := time.Now().UTC().Truncate(time.Hour).Add(-time.Hour)
++	g.policy.Store(&ExecutionBudgetPolicy{
++		UserAccess: BudgetAccessEnabled, WindowStart: start, WindowEnd: start.Add(3 * time.Hour),
++		Installation: BudgetCeiling{100, 1000}, User: BudgetCeiling{100, 1000},
++	})
++}
++
++func (g *budgetRepositoryFixture) counters(user string, want BudgetCeiling, reservations int) {
++	g.t.Helper()
++	var got BudgetCeiling
++	p := g.policy.Load()
++	query := `SELECT executions,tokens FROM product_agent_budget_installations WHERE window_start=$1 AND window_end=$2`
++	args := []any{p.WindowStart, p.WindowEnd}
++	if user != "" {
++		query = `SELECT executions,tokens FROM product_agent_budget_users WHERE user_id=$3 AND window_start=$1 AND window_end=$2`
++		args = append(args, user)
++	}
++	if err := g.f.PostgreSQL.QueryRow(g.ctx, query, args...).Scan(&got.Executions, &got.Tokens); err != nil || got != want {
++		g.t.Fatalf("durable counters %+v, want %+v: %v", got, want, err)
++	}
++	var count int
++	if err := g.f.PostgreSQL.QueryRow(g.ctx, `SELECT count(*) FROM product_agent_budget_reservations`).Scan(&count); err != nil || count != reservations {
++		g.t.Fatalf("durable reservation count %d, want %d: %v", count, reservations, err)
++	}
++}
++
++func budgetTestExecution(tokens int64) BudgetExecution {
++	return BudgetExecution{ID: uuid.NewString(), ExecutionSHA256: strings.Repeat("a", 64), MaximumTokens: tokens}
++}
++
++type budgetTestOutcome struct {
++	reservation BudgetReservation
++	err         error
++}
++
++func concurrentBudgetCalls(n int, call func(int) (BudgetReservation, error)) []budgetTestOutcome {
++	results := make([]budgetTestOutcome, n)
++	start := make(chan struct{})
++	var workers sync.WaitGroup
++	for i := range n {
++		workers.Go(func() {
++			<-start
++			results[i].reservation, results[i].err = call(i)
++		})
++	}
++	close(start)
++	workers.Wait()
++	return results
++}
++
++func TestDurableExecutionBudgets(t *testing.T) {
++	g := newBudgetRepositoryFixture(t)
++	for _, tc := range []struct {
++		name       string
++		ceiling    BudgetCeiling
++		actors     []identity.Auth
++		userScoped bool
++		admitted   int64
++	}{
++		{"user ceiling across entrances", BudgetCeiling{3, 1000}, g.actors[:2], true, 3},
++		{"user token ceiling across entrances", BudgetCeiling{100, 6}, g.actors[:2], true, 3},
++		{"installation ceiling across users", BudgetCeiling{4, 1000}, g.actors[1:], false, 4},
++		{"installation token ceiling across users", BudgetCeiling{100, 8}, g.actors[1:], false, 4},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			g.reset(t)
++			p := *g.policy.Load()
++			if tc.userScoped {
++				p.User = tc.ceiling
++			} else {
++				p.Installation = tc.ceiling
++			}
++			g.policy.Store(&p)
++			results := concurrentBudgetCalls(16, func(i int) (BudgetReservation, error) {
++				return g.gates[i%2].Reserve(g.ctx, tc.actors[i%len(tc.actors)], budgetTestExecution(2))
++			})
++			admitted := int64(0)
++			for _, result := range results {
++				if result.err == nil && result.reservation.State == BudgetNew {
++					admitted++
++				} else if result.err != ErrBudgetExceeded || result.reservation != (BudgetReservation{}) {
++					t.Fatalf("concurrent admission: %+v, %v", result.reservation, result.err)
++				}
++			}
++			if admitted != tc.admitted {
++				t.Fatalf("admitted %d, want %d", admitted, tc.admitted)
++			}
++			used := BudgetCeiling{admitted, 2 * admitted}
++			g.counters("", used, int(admitted))
++			if tc.userScoped {
++				g.counters(g.f.User, used, int(admitted))
++			}
++		})
++	}
++
++	t.Run("duplicate binding and settlement races", func(t *testing.T) {
++		g.reset(t)
++		execution := budgetTestExecution(7)
++		newCount := 0
++		for _, result := range concurrentBudgetCalls(12, func(i int) (BudgetReservation, error) {
++			return g.gates[i%2].Reserve(g.ctx, g.actors[1], execution)
++		}) {
++			if result.err != nil || result.reservation.ID != execution.ID {
++				t.Fatalf("duplicate admission: %+v, %v", result.reservation, result.err)
++			}
++			switch result.reservation.State {
++			case BudgetNew:
++				newCount++
++			case BudgetHeld:
++			default:
++				t.Fatalf("unexpected duplicate state: %s", result.reservation.State)
++			}
++		}
++		if newCount != 1 {
++			t.Fatalf("duplicate identity admitted %d executions", newCount)
++		}
++		g.counters("", BudgetCeiling{1, 7}, 1)
++		changed := execution
++		changed.ExecutionSHA256 = strings.Repeat("b", 64)
++		g.refusal(t, g.gates[0], g.actors[1], changed, "IDEMPOTENCY_CONFLICT")
++		changed = execution
++		changed.MaximumTokens++
++		g.refusal(t, g.gates[0], g.actors[1], changed, "IDEMPOTENCY_CONFLICT")
++		g.refusal(t, g.gates[1], g.actors[0], execution, "RESOURCE_NOT_FOUND")
++		g.refusal(t, g.gates[1], g.actors[2], execution, "RESOURCE_NOT_FOUND")
++		if result, err := g.gates[0].Settle(g.ctx, g.actors[1], BudgetSettlement{ID: execution.ID, ActualTokens: 8, ReceiptSHA256: strings.Repeat("c", 64)}); result != (BudgetReservation{}) || err == nil || err.Error() != "VALIDATION_FAILED" {
++			t.Fatalf("usage above the reserved maximum: %+v, %v", result, err)
++		}
++		settlement := BudgetSettlement{ID: execution.ID, ActualTokens: 2, ReceiptSHA256: strings.Repeat("c", 64)}
++		for _, result := range concurrentBudgetCalls(12, func(i int) (BudgetReservation, error) {
++			return g.gates[i%2].Settle(g.ctx, g.actors[1], settlement)
++		}) {
++			if result.err != nil || result.reservation != (BudgetReservation{execution.ID, BudgetSettled}) {
++				t.Fatalf("settlement race: %+v, %v", result.reservation, result.err)
++			}
++		}
++		g.counters("", BudgetCeiling{1, 2}, 1)
++		g.counters(g.f.User, BudgetCeiling{1, 2}, 1)
++		for _, changed := range []BudgetSettlement{
++			{ID: execution.ID, ActualTokens: 3, ReceiptSHA256: settlement.ReceiptSHA256},
++			{ID: execution.ID, ActualTokens: 2, ReceiptSHA256: strings.Repeat("d", 64)},
++		} {
++			if result, err := g.gates[0].Settle(g.ctx, g.actors[1], changed); err == nil || err.Error() != "IDEMPOTENCY_CONFLICT" || result != (BudgetReservation{}) {
++				t.Fatalf("changed settlement: %+v, %v", result, err)
++			}
++		}
++		if result, err := g.gates[1].Reserve(g.ctx, g.actors[1], execution); err != nil || result.State != BudgetSettled {
++			t.Fatalf("completed reservation replay: %+v, %v", result, err)
++		}
++		g.counters("", BudgetCeiling{1, 2}, 1)
++	})
++
++	t.Run("policy unavailable disabled and recovered", func(t *testing.T) {
++		g.reset(t)
++		gate := *g.gates[0]
++		for _, source := range []ExecutionBudgetPolicySource{
++			nil,
++			func(context.Context, transaction.Executor, BudgetSubject) (ExecutionBudgetPolicy, error) {
++				return ExecutionBudgetPolicy{}, errors.New("private policy diagnostic")
++			},
++			func(context.Context, transaction.Executor, BudgetSubject) (ExecutionBudgetPolicy, error) {
++				return ExecutionBudgetPolicy{}, nil
++			},
++		} {
++			gate.policy = source
++			g.refusal(t, &gate, g.actors[1], budgetTestExecution(1), "SERVICE_NOT_READY")
++		}
++		gate.policy = g.gates[0].policy
++		commands := *gate.commands
++		commands.executionPolicy = func(context.Context) (bool, error) { return false, nil }
++		gate.commands = &commands
++		g.refusal(t, &gate, g.actors[1], budgetTestExecution(1), "ACCESS_DENIED")
++		commands.executionPolicy = func(context.Context) (bool, error) { return true, errors.New("private installation diagnostic") }
++		g.refusal(t, &gate, g.actors[1], budgetTestExecution(1), "SERVICE_NOT_READY")
++		gate.commands = g.gates[0].commands
++		p := *g.policy.Load()
++		p.UserAccess = BudgetAccessDisabled
++		g.policy.Store(&p)
++		g.refusal(t, &gate, g.actors[1], budgetTestExecution(1), "ACCESS_DENIED")
++		p.UserAccess = BudgetAccessEnabled
++		p.WindowEnd = p.WindowStart
++		g.policy.Store(&p)
++		g.refusal(t, &gate, g.actors[1], budgetTestExecution(1), "SERVICE_NOT_READY")
++		p.WindowEnd = p.WindowStart.Add(-time.Hour)
++		p.WindowStart = p.WindowEnd.Add(-time.Hour)
++		g.policy.Store(&p)
++		g.refusal(t, &gate, g.actors[1], budgetTestExecution(1), "SERVICE_NOT_READY")
++		p.WindowStart = time.Now().UTC().Truncate(time.Hour).Add(24 * time.Hour)
++		p.WindowEnd = p.WindowStart.Add(time.Hour)
++		g.policy.Store(&p)
++		g.refusal(t, &gate, g.actors[1], budgetTestExecution(1), "SERVICE_NOT_READY")
++		var count int
++		if err := g.f.PostgreSQL.QueryRow(g.ctx, `SELECT (SELECT count(*) FROM product_agent_budget_reservations)+(SELECT count(*) FROM product_agent_budget_installations)+(SELECT count(*) FROM product_agent_budget_users)`).Scan(&count); err != nil || count != 0 {
++			t.Fatalf("refused policy changed durable state: %d, %v", count, err)
++		}
++		g.reset(t)
++		if result, err := gate.Reserve(g.ctx, g.actors[1], budgetTestExecution(0)); err != nil || result.State != BudgetNew {
++			t.Fatalf("policy recovery: %+v, %v", result, err)
++		}
++		g.counters("", BudgetCeiling{1, 0}, 1)
++	})
++
++	t.Run("user capacity spans authorized workspaces", func(t *testing.T) {
++		g.reset(t)
++		p := *g.policy.Load()
++		p.User = BudgetCeiling{1, 10}
++		g.policy.Store(&p)
++		workspace := uuid.NewString()
++		g.exec(`INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Budget second workspace','active')`, workspace, g.f.Tenant)
++		g.exec(`INSERT INTO workspace_memberships(user_id,tenant_id,workspace_id,role,authority_id) VALUES($1,$2,$3,'owner',$4)`, g.f.User, g.f.Tenant, workspace, uuid.NewString())
++		if result, err := g.gates[0].Reserve(g.ctx, g.actors[1], budgetTestExecution(1)); err != nil || result.State != BudgetNew {
++			t.Fatalf("first workspace admission: %+v, %v", result, err)
++		}
++		other := g.actors[1]
++		other.Me.Workspace = &identity.Workspace{ID: workspace, TenantID: g.f.Tenant}
++		g.refusal(t, g.gates[1], other, budgetTestExecution(1), "RATE_LIMITED")
++		g.counters(g.f.User, BudgetCeiling{1, 1}, 1)
++	})
++
++	t.Run("rollback and unknown commit preserve authority", func(t *testing.T) {
++		g.reset(t)
++		execution := budgetTestExecution(7)
++		rollback := g.gate(&budgetOutcomeStore{Store: g.f.Store, rollback: true})
++		g.refusal(t, rollback, g.actors[1], execution, "STORAGE_UNAVAILABLE")
++		unknown := g.gate(&budgetOutcomeStore{Store: g.f.Store})
++		g.refusal(t, unknown, g.actors[1], execution, "STORAGE_COMMIT_OUTCOME_UNKNOWN")
++		g.counters("", BudgetCeiling{1, 7}, 1)
++		// A new service and independent pool recover the hold, not execution authority.
++		if result, err := g.gates[1].Reserve(g.ctx, g.actors[1], execution); err != nil || result.State != BudgetHeld {
++			t.Fatalf("reopened unknown admission: %+v, %v", result, err)
++		}
++		settlement := BudgetSettlement{ID: execution.ID, ActualTokens: 2, ReceiptSHA256: strings.Repeat("e", 64)}
++		if result, err := unknown.Settle(g.ctx, g.actors[1], settlement); result != (BudgetReservation{}) || err == nil || err.Error() != "STORAGE_COMMIT_OUTCOME_UNKNOWN" {
++			t.Fatalf("unknown settlement: %+v, %v", result, err)
++		}
++		if result, err := g.gates[1].Settle(g.ctx, g.actors[1], settlement); err != nil || result.State != BudgetSettled {
++			t.Fatalf("reopened settlement: %+v, %v", result, err)
++		}
++		g.counters("", BudgetCeiling{1, 2}, 1)
++	})
++
++	t.Run("finite integer limits", func(t *testing.T) {
++		g.reset(t)
++		p := *g.policy.Load()
++		p.User = BudgetCeiling{}
++		g.policy.Store(&p)
++		g.refusal(t, g.gates[0], g.actors[1], budgetTestExecution(0), "RATE_LIMITED")
++		p.Installation = BudgetCeiling{math.MaxInt64, math.MaxInt64}
++		p.User = p.Installation
++		g.policy.Store(&p)
++		execution := budgetTestExecution(math.MaxInt64)
++		if result, err := g.gates[0].Reserve(g.ctx, g.actors[1], execution); err != nil || result.State != BudgetNew {
++			t.Fatalf("maximum finite token reservation: %+v, %v", result, err)
++		}
++		g.refusal(t, g.gates[1], g.actors[1], budgetTestExecution(1), "RATE_LIMITED")
++		g.counters("", BudgetCeiling{1, math.MaxInt64}, 1)
++		if result, err := g.gates[0].Settle(g.ctx, g.actors[1], BudgetSettlement{ID: execution.ID, ReceiptSHA256: strings.Repeat("e", 64)}); err != nil || result.State != BudgetSettled {
++			t.Fatalf("maximum unused token refund: %+v, %v", result, err)
++		}
++		g.exec(`UPDATE product_agent_budget_installations SET executions=$1,tokens=0`, int64(math.MaxInt64-1))
++		g.exec(`UPDATE product_agent_budget_users SET executions=$1,tokens=0`, int64(math.MaxInt64-1))
++		if result, err := g.gates[1].Reserve(g.ctx, g.actors[1], budgetTestExecution(0)); err != nil || result.State != BudgetNew {
++			t.Fatalf("maximum finite execution charge: %+v, %v", result, err)
++		}
++		g.refusal(t, g.gates[0], g.actors[1], budgetTestExecution(0), "RATE_LIMITED")
++		g.counters("", BudgetCeiling{math.MaxInt64, 0}, 2)
++	})
++
++	t.Run("settlement retains the original policy window", func(t *testing.T) {
++		g.reset(t)
++		old := *g.policy.Load()
++		execution := budgetTestExecution(7)
++		if result, err := g.gates[0].Reserve(g.ctx, g.actors[1], execution); err != nil || result.State != BudgetNew {
++			t.Fatalf("original admission: %+v, %v", result, err)
++		}
++		next := old
++		next.WindowStart = old.WindowStart.Add(-time.Hour)
++		next.WindowEnd = old.WindowEnd.Add(time.Hour)
++		g.policy.Store(&next)
++		if result, err := g.gates[1].Reserve(g.ctx, g.actors[1], execution); err != nil || result.State != BudgetHeld {
++			t.Fatalf("window change replay: %+v, %v", result, err)
++		}
++		if result, err := g.gates[1].Reserve(g.ctx, g.actors[1], budgetTestExecution(5)); err != nil || result.State != BudgetNew {
++			t.Fatalf("next window admission: %+v, %v", result, err)
++		}
++		settlement := BudgetSettlement{ID: execution.ID, ActualTokens: 2, ReceiptSHA256: strings.Repeat("f", 64)}
++		// Settlement is permitted even when new execution is explicitly disabled.
++		next.UserAccess = BudgetAccessDisabled
++		g.policy.Store(&next)
++		if result, err := g.gates[0].Settle(g.ctx, g.actors[1], settlement); err != nil || result.State != BudgetSettled {
++			t.Fatalf("original window settlement: %+v, %v", result, err)
++		}
++		g.counters("", BudgetCeiling{1, 5}, 2)
++		g.policy.Store(&old)
++		g.counters("", BudgetCeiling{1, 2}, 2)
++		g.counters(g.f.User, BudgetCeiling{1, 2}, 2)
++	})
++
++	t.Run("cancellation while waiting for shared capacity", func(t *testing.T) {
++		g.reset(t)
++		if _, err := g.gates[0].Reserve(g.ctx, g.actors[1], budgetTestExecution(1)); err != nil {
++			t.Fatal(err)
++		}
++		blocker, err := g.f.PostgreSQL.Begin(g.ctx)
++		if err != nil {
++			t.Fatal(err)
++		}
++		defer blocker.Rollback(g.ctx)
++		var blockerID uint32
++		if err := blocker.QueryRow(g.ctx, `SELECT pg_backend_pid()`).Scan(&blockerID); err != nil {
++			t.Fatal(err)
++		}
++		if _, err := blocker.Exec(g.ctx, `SELECT executions FROM product_agent_budget_installations FOR UPDATE`); err != nil {
++			t.Fatal(err)
++		}
++		ctx, cancel := context.WithCancel(g.ctx)
++		defer cancel()
++		finished := make(chan budgetTestOutcome, 1)
++		go func() {
++			r, err := g.gates[1].Reserve(ctx, g.actors[2], budgetTestExecution(3))
++			finished <- budgetTestOutcome{r, err}
++		}()
++		poll, stop := context.WithTimeout(g.ctx, 2*time.Second)
++		defer stop()
++		ticker := time.NewTicker(10 * time.Millisecond)
++		defer ticker.Stop()
++		blocked := false
++		for !blocked && poll.Err() == nil {
++			if err := g.f.PostgreSQL.QueryRow(poll, `SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE application_name=$1 AND $2=ANY(pg_blocking_pids(pid)))`,
++				g.replicaPool.Config().ConnConfig.RuntimeParams["application_name"], blockerID).Scan(&blocked); err != nil {
++				break
++			}
++			if !blocked {
++				select {
++				case <-ticker.C:
++				case <-poll.Done():
++				}
++			}
++		}
++		cancel()
++		result := <-finished
++		if !blocked || result.reservation != (BudgetReservation{}) || !errors.Is(result.err, context.Canceled) {
++			t.Fatalf("locked cancellation: blocked=%v, result=%+v, error=%v", blocked, result.reservation, result.err)
++		}
++		if err := blocker.Rollback(g.ctx); err != nil {
++			t.Fatal(err)
++		}
++		g.counters("", BudgetCeiling{1, 1}, 1)
++	})
++
++	t.Run("missing candidate schema fails closed then recovers", func(t *testing.T) {
++		g.reset(t)
++		execution := budgetTestExecution(3)
++		g.exec(`ALTER TABLE product_agent_budget_reservations RENAME TO product_agent_budget_reservations_unavailable`)
++		g.refusal(t, g.gates[0], g.actors[1], execution, "STORAGE_UNAVAILABLE")
++		g.exec(`ALTER TABLE product_agent_budget_reservations_unavailable RENAME TO product_agent_budget_reservations`)
++		if result, err := g.gates[1].Reserve(g.ctx, g.actors[1], execution); err != nil || result.State != BudgetNew {
++			t.Fatalf("schema recovery: %+v, %v", result, err)
++		}
++		g.counters("", BudgetCeiling{1, 3}, 1)
++	})
++
++	t.Run("authority denial precedes policy and reservation", func(t *testing.T) {
++		g.reset(t)
++		var calls atomic.Int64
++		gate := *g.gates[0]
++		gate.policy = func(context.Context, transaction.Executor, BudgetSubject) (ExecutionBudgetPolicy, error) {
++			calls.Add(1)
++			return *g.policy.Load(), nil
++		}
++		foreignTenant, foreignWorkspace := uuid.NewString(), uuid.NewString()
++		g.exec(`INSERT INTO tenants(id,name,status) VALUES($1,'Budget foreign tenant','active')`, foreignTenant)
++		g.exec(`INSERT INTO workspaces(id,tenant_id,name,status) VALUES($1,$2,'Budget foreign workspace','active')`, foreignWorkspace, foreignTenant)
++		foreign := g.actors[1]
++		foreign.Me.Workspace = &identity.Workspace{ID: foreignWorkspace, TenantID: foreignTenant}
++		g.refusal(t, &gate, foreign, budgetTestExecution(1), "RESOURCE_NOT_FOUND")
++		g.exec(`DELETE FROM workspace_memberships WHERE user_id=$1 AND workspace_id=$2`, g.actors[2].Me.User.ID, g.f.Workspace)
++		g.refusal(t, &gate, g.actors[2], budgetTestExecution(1), "RESOURCE_NOT_FOUND")
++		g.exec(`UPDATE sessions SET revoked_at=clock_timestamp(),revoke_reason='logout' WHERE id=$1`, g.actors[1].SessionID)
++		g.refusal(t, &gate, g.actors[1], budgetTestExecution(1), "AUTH_SESSION_EXPIRED")
++		if calls.Load() != 0 {
++			t.Fatal("unavailable authority reached the trusted budget policy")
++		}
++		var count int
++		if err := g.f.PostgreSQL.QueryRow(g.ctx, `SELECT count(*) FROM product_agent_budget_reservations`).Scan(&count); err != nil || count != 0 {
++			t.Fatalf("denied authority left reservations: %d, %v", count, err)
++		}
++	})
++}
++
++func (g *budgetRepositoryFixture) refusal(t *testing.T, gate *ExecutionBudgets, actor identity.Auth, execution BudgetExecution, code string) {
++	t.Helper()
++	result, err := gate.Reserve(g.ctx, actor, execution)
++	if result != (BudgetReservation{}) || err == nil || err.Error() != code {
++		t.Fatalf("refusal: %+v, %v; want %s", result, err, code)
++	}
++}
++
++// The callback executes on PostgreSQL. The wrapper injects a lost reply only
++// after a real commit, or a failure inside the callback to force a real rollback.
++type budgetOutcomeStore struct {
++	transaction.Store
++	rollback bool
++}
++
++func (s *budgetOutcomeStore) Within(ctx context.Context, readOnly bool, fn func(context.Context, transaction.Executor) error) error {
++	err := s.Store.Within(ctx, readOnly, func(ctx context.Context, tx transaction.Executor) error {
++		if err := fn(ctx, tx); err != nil {
++			return err
++		}
++		if s.rollback {
++			return &transaction.Error{Kind: transaction.Unavailable}
++		}
++		return nil
++	})
++	if err != nil {
++		return err
++	}
++	return &transaction.Error{Kind: transaction.CommitUnknown}
++}
+diff --git a/services/control/internal/modules/productagent/execution_budget_test.go b/services/control/internal/modules/productagent/execution_budget_test.go
+new file mode 100644
+index 00000000..0e03f9cf
+--- /dev/null
++++ b/services/control/internal/modules/productagent/execution_budget_test.go
+@@ -0,0 +1,104 @@
++package productagent
++
++import (
++	"context"
++	"math"
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/Passion-Flow/ownsolid/services/control/internal/modules/identity"
++	"github.com/google/uuid"
++)
++
++func TestExecutionBudgetBoundaries(t *testing.T) {
++	for _, tc := range []struct {
++		name          string
++		used, ceiling BudgetCeiling
++		tokens        int64
++		want          bool
++	}{
++		{"zero executions", BudgetCeiling{}, BudgetCeiling{Tokens: 1}, 0, false},
++		{"deterministic command", BudgetCeiling{}, BudgetCeiling{Executions: 1}, 0, true},
++		{"no model allowance", BudgetCeiling{}, BudgetCeiling{Executions: 1}, 1, false},
++		{"exact token capacity", BudgetCeiling{1, 2}, BudgetCeiling{2, 5}, 3, true},
++		{"execution exhausted", BudgetCeiling{2, 2}, BudgetCeiling{2, 5}, 1, false},
++		{"lowered token ceiling", BudgetCeiling{1, 5}, BudgetCeiling{2, 4}, 0, false},
++		{"maximum token charge", BudgetCeiling{}, BudgetCeiling{math.MaxInt64, math.MaxInt64}, math.MaxInt64, true},
++		{"token overflow denied", BudgetCeiling{1, math.MaxInt64}, BudgetCeiling{math.MaxInt64, math.MaxInt64}, 1, false},
++		{"execution overflow denied", BudgetCeiling{math.MaxInt64, 0}, BudgetCeiling{math.MaxInt64, math.MaxInt64}, 0, false},
++		{"negative stored usage", BudgetCeiling{1, -1}, BudgetCeiling{2, 5}, 1, false},
++		{"negative charge", BudgetCeiling{}, BudgetCeiling{2, 5}, -1, false},
++	} {
++		t.Run(tc.name, func(t *testing.T) {
++			if got := budgetFits(tc.used, tc.ceiling, tc.tokens); got != tc.want {
++				t.Fatalf("capacity decision %v, want %v", got, tc.want)
++			}
++		})
++	}
++}
++
++func TestExecutionBudgetPolicyRequiresCompleteExplicitWindow(t *testing.T) {
++	start := time.Date(2026, 11, 12, 0, 0, 0, 0, time.UTC)
++	valid := ExecutionBudgetPolicy{UserAccess: BudgetAccessEnabled, WindowStart: start, WindowEnd: start.Add(time.Hour)}
++	if !validBudgetPolicy(valid) {
++		t.Fatal("zero ceilings must be valid finite denial, not an unlimited default")
++	}
++	for _, mutate := range []func(*ExecutionBudgetPolicy){
++		func(p *ExecutionBudgetPolicy) { p.UserAccess = "" },
++		func(p *ExecutionBudgetPolicy) { p.UserAccess = "unknown" },
++		func(p *ExecutionBudgetPolicy) { p.WindowStart = time.Time{} },
++		func(p *ExecutionBudgetPolicy) { p.WindowEnd = p.WindowStart },
++		func(p *ExecutionBudgetPolicy) { p.WindowEnd = p.WindowStart.Add(-time.Hour) },
++		func(p *ExecutionBudgetPolicy) { p.WindowStart = p.WindowStart.Add(time.Nanosecond) },
++		func(p *ExecutionBudgetPolicy) { p.WindowEnd = p.WindowEnd.Add(time.Nanosecond) },
++		func(p *ExecutionBudgetPolicy) { p.Installation.Executions = -1 },
++		func(p *ExecutionBudgetPolicy) { p.Installation.Tokens = -1 },
++		func(p *ExecutionBudgetPolicy) { p.User.Executions = -1 },
++		func(p *ExecutionBudgetPolicy) { p.User.Tokens = -1 },
++	} {
++		p := valid
++		mutate(&p)
++		if validBudgetPolicy(p) {
++			t.Fatalf("incomplete policy admitted: %+v", p)
++		}
++	}
++}
++
++func TestExecutionBudgetRejectsUntrustedRequestBeforeStorage(t *testing.T) {
++	var gate *ExecutionBudgets
++	valid := BudgetExecution{ID: uuid.NewString(), ExecutionSHA256: strings.Repeat("a", 64)}
++	for _, execution := range []BudgetExecution{
++		{},
++		{ID: "client choice", ExecutionSHA256: valid.ExecutionSHA256},
++		{ID: valid.ID, ExecutionSHA256: strings.Repeat("A", 64)},
++		{ID: valid.ID, ExecutionSHA256: strings.Repeat("a", 63)},
++		{ID: valid.ID, ExecutionSHA256: valid.ExecutionSHA256, MaximumTokens: -1},
++	} {
++		result, err := gate.Reserve(t.Context(), identity.Auth{}, execution)
++		if result != (BudgetReservation{}) || err == nil || err.Error() != "VALIDATION_FAILED" {
++			t.Fatalf("malformed execution returned %+v, %v", result, err)
++		}
++	}
++	for _, ctx := range []context.Context{nil, t.Context()} {
++		if result, err := gate.Reserve(ctx, identity.Auth{}, valid); result != (BudgetReservation{}) || err != ErrCommandDenied {
++			t.Fatalf("missing authority returned %+v, %v", result, err)
++		}
++	}
++	if _, err := NewExecutionBudgets(nil, nil); err == nil {
++		t.Fatal("constructed a gate without authority")
++	}
++	for _, settlement := range []BudgetSettlement{
++		{},
++		{ID: valid.ID, ReceiptSHA256: strings.Repeat("c", 63)},
++		{ID: valid.ID, ReceiptSHA256: strings.Repeat("C", 64)},
++		{ID: valid.ID, ActualTokens: -1, ReceiptSHA256: strings.Repeat("c", 64)},
++	} {
++		if result, err := gate.Settle(t.Context(), identity.Auth{}, settlement); result != (BudgetReservation{}) || err == nil || err.Error() != "VALIDATION_FAILED" {
++			t.Fatalf("malformed settlement returned %+v, %v", result, err)
++		}
++	}
++	if result, err := gate.Settle(nil, identity.Auth{}, BudgetSettlement{ID: valid.ID, ReceiptSHA256: valid.ExecutionSHA256}); result != (BudgetReservation{}) || err != ErrCommandDenied {
++		t.Fatalf("settlement without authority returned %+v, %v", result, err)
++	}
++}
+diff --git a/services/control/internal/modules/productagent/testdata/execution-budget.sql b/services/control/internal/modules/productagent/testdata/execution-budget.sql
+new file mode 100644
+index 00000000..943d9feb
+--- /dev/null
++++ b/services/control/internal/modules/productagent/testdata/execution-budget.sql
+@@ -0,0 +1,43 @@
++-- Candidate AGT-112 schema for isolated repository acceptance only.
++-- Production requires an owned forward migration and restore-catalogue registration.
++CREATE TABLE product_agent_budget_installations (
++    window_start timestamptz NOT NULL,
++    window_end timestamptz NOT NULL,
++    executions bigint NOT NULL DEFAULT 0 CHECK (executions >= 0),
++    tokens bigint NOT NULL DEFAULT 0 CHECK (tokens >= 0),
++    PRIMARY KEY (window_start, window_end),
++    CHECK (window_start < window_end)
++);
++
++CREATE TABLE product_agent_budget_users (
++    user_id uuid NOT NULL,
++    window_start timestamptz NOT NULL,
++    window_end timestamptz NOT NULL,
++    executions bigint NOT NULL DEFAULT 0 CHECK (executions >= 0),
++    tokens bigint NOT NULL DEFAULT 0 CHECK (tokens >= 0),
++    PRIMARY KEY (user_id, window_start, window_end),
++    CHECK (window_start < window_end)
++);
++
++CREATE TABLE product_agent_budget_reservations (
++    id uuid PRIMARY KEY,
++    tenant_id uuid NOT NULL,
++    user_id uuid NOT NULL,
++    workspace_id uuid NOT NULL,
++    audience text NOT NULL CHECK (audience IN ('admin', 'portal')),
++    execution_sha256 text NOT NULL CHECK (execution_sha256 ~ '^[a-f0-9]{64}$'),
++    maximum_tokens bigint NOT NULL CHECK (maximum_tokens >= 0),
++    window_start timestamptz NOT NULL,
++    window_end timestamptz NOT NULL,
++    state text NOT NULL CHECK (state IN ('held', 'settled')),
++    actual_tokens bigint,
++    receipt_sha256 text,
++    CHECK (window_start < window_end),
++    CHECK (
++        (state = 'held' AND actual_tokens IS NULL AND receipt_sha256 IS NULL)
++        OR
++        (state = 'settled' AND actual_tokens IS NOT NULL AND actual_tokens >= 0
++            AND actual_tokens <= maximum_tokens AND receipt_sha256 IS NOT NULL
++            AND receipt_sha256 ~ '^[a-f0-9]{64}$')
++    )
++);

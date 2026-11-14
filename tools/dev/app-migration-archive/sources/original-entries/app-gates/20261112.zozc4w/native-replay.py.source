@@ -1,0 +1,43 @@
+import hashlib,json,os,socket,subprocess,sys
+from pathlib import Path
+repo=Path(sys.argv[1])
+root=Path(__file__).parent
+inputs=root/'retained'
+output=root/'native-replay'
+output.mkdir(mode=0o700)
+try:
+    socket.socket().connect(('127.0.0.1',9))
+except PermissionError:
+    (output/'network-denied').write_text('OS sandbox refused a loopback network connection\n')
+else:
+    raise RuntimeError('Required network denial did not hold')
+version='b9a4c16cfc53a84c4761ff96aead7b6cac5ee92a306abe597953d6abf6141105'
+native='08090645ef3cdd5f1a36c58f6194e3afe6c1cff79651decf856fbb9d14dc1d96'
+common=[sys.executable,'-B',str(repo/'services/control/internal/modules/productagent/testdata/qualify_model.py'),
+        '--dataset-version',str(inputs/'publication/version.json'),'--dataset-version-sha256',version,
+        '--validation',str(inputs/'publication/validation.jsonl'),
+        '--model-catalog',str(repo/'api/agent/v1/model-catalog.json'),
+        '--recipe',str(repo/'runtimes/model-lifecycle/tests/testdata/safety-recipe-v1.json')]
+env=os.environ|{'PYTHONPATH':':'.join(str(repo/x) for x in ['runtimes/model-lifecycle','runtimes/data-processing','runtimes/training'])}
+def replay(label,capture,report,digest,bind):
+    command=common+['--capture',str(inputs/capture),'--capture-sha256',digest,'--check-report',str(inputs/report)]
+    if bind:
+        command+=['--native-observations',str(inputs/'run-1/raw-cases.json'),'--native-observations-sha256',native]
+    result=subprocess.run(command,env=env,capture_output=True)
+    (output/(label+'.stdout')).write_bytes(result.stdout)
+    (output/(label+'.stderr')).write_bytes(result.stderr)
+    if label=='substitution':
+        assert result.returncode==1 and result.stdout==b'' and result.stderr.strip()==b'ASSISTANT_NATIVE_OBSERVATIONS_MISMATCH'
+    else:
+        assert result.returncode==0,result.stderr
+        decision=json.loads(result.stdout)
+        assert decision['tier']=='unqualified'
+        if label=='native':
+            assert decision['evidence_mode']=='retained_native_output_replay' and decision['safety_prerequisite']=='not_met'
+            assert decision['outcomes']['unverified']==3
+        else:
+            assert decision['safety_prerequisite']=='met' and decision['evidence_mode']=='retained_output_replay'
+    print(label+' passed')
+replay('native','run-1/capture.json','run-1/report.json','24baa39fdc9b7f6dbd4265c336ee01bb0a10f422bc057bd400b8313c47add5ad',True)
+replay('control','refusal-control/control-capture.json','refusal-control/control-report.json','868cb905f6fd63dd5a177ed8fe3cbc16a18a23f48c94b007c101ab97b7796baf',False)
+replay('substitution','refusal-control/control-capture.json','refusal-control/control-report.json','868cb905f6fd63dd5a177ed8fe3cbc16a18a23f48c94b007c101ab97b7796baf',True)

@@ -1,0 +1,63 @@
+from pathlib import Path
+import fcntl, hashlib, json, os, subprocess, sys, time, uuid
+
+root=Path(sys.argv[1]).resolve()
+source=Path(sys.argv[2]).resolve(strict=True)
+lock_path=Path('/private/tmp/ownsolid-workstation-full-gate.lock')
+import stat
+info=lock_path.lstat()
+assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+fd=int(sys.argv[3]) if len(sys.argv)>3 else os.open(lock_path,os.O_RDWR|os.O_NOFOLLOW)
+opened=os.fstat(fd)
+assert (info.st_dev,info.st_ino)==(opened.st_dev,opened.st_ino)
+fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+def run(*args,**kw):
+    return subprocess.run(args,check=True,text=True,**kw)
+head=run('git','rev-parse','HEAD',cwd=source,capture_output=True).stdout.strip()
+with (root/'preflight.log').open('w') as log: run('df','-h','/',stdout=log)
+(root/'overlay').mkdir()
+run('python3',str(source/'services/control/internal/modules/productagent/http/testdata/dispatch_overlay.py'),str(root/'overlay'))
+compile_env=os.environ|{'GOOS':'linux','GOARCH':'arm64','CGO_ENABLED':'0','GOPROXY':'off','GOSUMDB':'off','GOMAXPROCS':'2','GOFLAGS':'-p=1'}
+for name,package,tags in [('repository','productagent','repository_integration'),('http','productagent/http','repository_integration,assistant_http_dispatch')]:
+    command=['go','test','-p=1','-c','-ldflags=-s -w','-tags='+tags,'-o',str(root/(name+'.test'))]
+    if name=='http': command+=['-overlay='+str(root/'overlay/overlay.json')]
+    command+=['./internal/modules/'+package]
+    with (root/(name+'-build.log')).open('w') as log: run(*command,cwd=source/'services/control',env=compile_env,stdout=log,stderr=subprocess.STDOUT)
+    print(name+' compiled',flush=True)
+image,system,arch=run('docker','image','inspect','--format','{{.Id}} {{.Os}} {{.Architecture}}','pgvector/pgvector:0.8.7-pg18-bookworm',capture_output=True).stdout.split()
+assert (system,arch)==('linux','arm64')
+container=run('docker','run','--rm','--pull=never','--network','none','--cpus','2','-d','-e','POSTGRES_HOST_AUTH_METHOD=trust','-e','POSTGRES_DB=assistant_fixture_test',image,capture_output=True).stdout.strip()
+(root/'container').write_text(container+'\n')
+fixture='/tmp/assistant-fixture'; dsn=fixture+'/postgres.dsn'
+passed=[]
+try:
+    deadline=time.monotonic()+45
+    while subprocess.run(['docker','exec',container,'pg_isready','-q','-h','127.0.0.1','-U','postgres','-d','assistant_fixture_test'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=5).returncode:
+        if time.monotonic()>deadline: raise RuntimeError('Private PostgreSQL startup failed')
+        time.sleep(1)
+    with (root/'postgres.log').open('w') as log: run('docker','exec',container,'psql','-X','-U','postgres','-d','assistant_fixture_test','-v','ON_ERROR_STOP=1','-c',"CREATE EXTENSION vector WITH SCHEMA public VERSION '0.8.7'; REVOKE CREATE ON SCHEMA public FROM PUBLIC; SHOW server_version;",stdout=log,stderr=subprocess.STDOUT)
+    run('docker','exec',container,'install','-d','-m','0700',fixture,fixture+'/services/control/internal/modules/productagent',fixture+'/services/control/internal/modules/productagent/http',fixture+'/services/control/internal/modules/productagent/testdata')
+    run('docker','exec','-i',container,'sh','-c','umask 077; cat > "$1"','sh',dsn,input='postgresql://postgres@127.0.0.1:5432/assistant_fixture_test?sslmode=disable\n')
+    run('docker','cp',str(source/'services/control/internal/modules/productagent/testdata/execution-budget.sql'),container+':'+fixture+'/services/control/internal/modules/productagent/testdata/execution-budget.sql',stdout=subprocess.DEVNULL)
+    cases=[('repository','productagent','Test(DurableExecutionBudgets|DurableExecutionRuns|OfflineCommandsWithCurrentSessionAndWorkspace|ApplicationNameResolutionWithDurableRun|ApplicationNameResolutionFinalFences)'),('http','productagent/http','TestAuthenticated(Guarded)?AssistantHTTP')]
+    for name,package,pattern in cases:
+        run('docker','cp',str(root/(name+'.test')),container+':'+fixture+'/'+name+'.test',stdout=subprocess.DEVNULL)
+        command=['docker','exec','-w',fixture+'/services/control/internal/modules/'+package,'-e','GOMAXPROCS=2','-e','PROJECT_ONE_TEST_DSN_FILE='+dsn,'-e','PROJECT_ONE_REPOSITORY_ENGINE=postgresql','-e','PROJECT_ONE_REPOSITORY_POSTGRES_DSN_FILE='+dsn,'-e','PROJECT_ONE_REPOSITORY_POSTGRES_SCHEMA=m20_repository_'+uuid.uuid4().hex,container,fixture+'/'+name+'.test','-test.v','-test.parallel=1','-test.timeout=240s','-test.run','^'+pattern+'$']
+        result=subprocess.run(command,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=270)
+        (root/(name+'.log')).write_text(result.stdout)
+        result.check_returncode()
+        if '--- SKIP:' in result.stdout or '--- FAIL:' in result.stdout or '--- PASS:' not in result.stdout: raise RuntimeError('Required test did not pass')
+        passed.append(name)
+        print(name+' acceptance passed',flush=True)
+    network=run('docker','inspect','--format','{{.HostConfig.NetworkMode}}',container,capture_output=True).stdout.strip()
+    assert network=='none'
+    assert run('git','rev-parse','HEAD',cwd=source,capture_output=True).stdout.strip()==head
+    (root/'proof.json').write_text(json.dumps({'head':head,'postgres_image':image,'architecture':arch,'network':network,'passed':passed},indent=2)+'\n')
+finally:
+    with (root/'postgres-server.log').open('w') as log: subprocess.run(['docker','logs',container],stdout=log,stderr=subprocess.STDOUT)
+    stopped=subprocess.run(['docker','stop','--time','5',container],text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
+    (root/'stop.log').write_text(stopped.stdout)
+    absent=subprocess.run(['docker','inspect',container],text=True,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
+    if absent.returncode and 'no such object' in absent.stderr.lower():
+        (root/'removed').write_text(container+'\n')
+    else: raise RuntimeError('Owned fixture removal was not confirmed')

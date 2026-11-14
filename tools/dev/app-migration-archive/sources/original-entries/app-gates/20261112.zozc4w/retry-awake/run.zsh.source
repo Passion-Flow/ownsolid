@@ -1,0 +1,38 @@
+set -euo pipefail
+umask 022
+app_root=/Users/passion./.local/state/ownsolid/app-gates/20261112.ZOZC4W
+app_run="$app_root/retry-awake"
+app_mount=/private/tmp/oa-ZOZC4W
+cd "/Users/passion./Documents/Passion's WorkSpace/Development/lane-app"
+test "$(cat /private/tmp/ownsolid-workstation-full-gate.lock/owner)" = "$app_root"
+test "$(git rev-parse HEAD)" = "$(cat "$app_root/head")"
+test -z "$(git status --porcelain)"
+cleanup() {
+  app_status=$?
+  trap - EXIT
+  hdiutil detach "$app_mount" >> "$app_run/cleanup.log" 2>&1 || app_status=1
+  rmdir "$app_mount" || app_status=1
+  printf '%s\n' "$app_status" > "$app_run/exit-status"
+  date -u > "$app_run/finish"
+  exit "$app_status"
+}
+mkdir "$app_mount"
+hdiutil attach -nobrowse -mountpoint "$app_mount" "$app_root/scratch.sparseimage" > "$app_run/volume-attach.log"
+trap cleanup EXIT
+export PYTHON="$(uv python find 3.12)"
+export PYTHONDONTWRITEBYTECODE=1
+export GOPROXY=off GOSUMDB=off GOMAXPROCS=2 GOFLAGS=-p=1
+export CARGO_NET_OFFLINE=true CARGO_BUILD_JOBS=2 RUST_TEST_THREADS=2 VITEST_MAX_WORKERS=2
+export TMPDIR="$app_mount/tmp/"
+export OWNSOLID_PLAYWRIGHT_PORT_OFFSET=$(($(awk '{print $1}' "$app_root/ports") - 4310))
+date -u > "$app_run/start"
+pmset -g assertions > "$app_run/assertions"
+make -f Makefile -f "$app_root/browser-concurrency.mk" test > "$app_run/test.log" 2>&1
+printf 'make test passed\n'
+go -C services/control test -race ./internal/modules/productagent/... ./internal/modules/audit/... > "$app_run/affected-race.log" 2>&1
+go -C services/control vet ./internal/modules/productagent/... ./internal/modules/audit/... > "$app_run/affected-vet.log" 2>&1
+PYTHONPATH="$PWD/runtimes/model-lifecycle:$PWD/runtimes/data-processing:$PWD/runtimes/training:$PWD/services/control/internal/modules/productagent/testdata" "$PYTHON" -B -m unittest discover -s services/control/internal/modules/productagent/testdata -p 'test_qualify_model.py' > "$app_run/qualifier-unit.log" 2>&1
+printf 'Focused checks passed\n'
+git diff --check
+test -z "$(git status --porcelain)"
+git rev-parse HEAD > "$app_run/ok"

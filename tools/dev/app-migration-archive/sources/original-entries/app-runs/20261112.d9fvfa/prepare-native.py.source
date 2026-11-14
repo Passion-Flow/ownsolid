@@ -1,0 +1,50 @@
+import argparse
+import json
+import os
+from pathlib import Path
+import subprocess
+import time
+import uuid
+
+
+def run(*args, **kwargs):
+    return subprocess.run(args, check=True, text=True, **kwargs)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('repo', type=Path)
+    parser.add_argument('output', type=Path)
+    parser.add_argument('--budgets', action='store_true')
+    args = parser.parse_args()
+    repo = args.repo.resolve(strict=True)
+    output = args.output.resolve()
+    output.mkdir(mode=0o700)
+    image, system, arch = 'deferred', 'linux', 'amd64'
+    assert system == 'linux' and arch == 'amd64'
+    (output/'image').write_text(image+'\n')
+    env = os.environ | {'GOOS':'linux','GOARCH':'amd64','CGO_ENABLED':'0','GOPROXY':'off','GOSUMDB':'off',
+                        'GOFLAGS':'-p=1','GOMAXPROCS':'2'}
+    modules = repo/'services/control/internal/modules'
+    overlay = output/'overlay'
+    overlay.mkdir()
+    run(os.environ['PYTHON'], str(modules/'productagent/http/testdata/dispatch_overlay.py'),str(overlay),cwd=repo)
+    cases = [
+        ('audit','./internal/modules/audit',[], 'TestProductAssistantAuditWithin'),
+        ('repository','./internal/modules/productagent',['-tags=repository_integration'],
+         'Test(DurableExecutionBudgets|DurableExecutionRuns|OfflineCommandsWithCurrentSessionAndWorkspace)'),
+        ('http','./internal/modules/productagent/http',
+         ['-tags=repository_integration,assistant_http_dispatch','-overlay='+str(overlay/'overlay.json')],
+         'TestAuthenticated(Guarded)?AssistantHTTP'),
+    ]
+    with (output/'build.log').open('w') as log:
+        for name, package, flags, test in cases:
+            run('go','-C','services/control','test','-p=1','-c',*flags,'-o',str(output/(name+'.test')),package,
+                env=env,cwd=repo,stdout=log,stderr=subprocess.STDOUT)
+        if not args.budgets:
+            run('go','build','-p=1','-trimpath','-o',str(output/'audit-verify'),'./tools/audit-verify/',
+            env=env,cwd=repo,stdout=log,stderr=subprocess.STDOUT)
+    (output/'head').write_text(run('git','rev-parse','HEAD',cwd=repo,capture_output=True).stdout)
+
+if __name__=='__main__':
+    main()

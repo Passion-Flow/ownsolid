@@ -1,0 +1,15 @@
+from pathlib import Path
+import fcntl, os, subprocess
+p=Path('/root/lane-app-runs-20261112.o0Ygio'); source=p/'source'
+lock=open('/run/lock/ownsolid-heavy.lock','a'); fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+image='sha256:d9b6a1beb9474adc2a1ce842573639b44b2a0dd49b6669f51d3821baf9ec37c9'
+command=['docker','run','--rm','--pull=never','--network','none','--cpus','2','-v',str(p)+':'+str(p),'-v','/root/go/pkg/mod:/go/pkg/mod:ro','-w',str(source/'services/control'),'-e','GOPROXY=off','-e','GOSUMDB=off','-e','GOTOOLCHAIN=local','-e','CGO_ENABLED=0','-e','GOMAXPROCS=2','-e','GOFLAGS=-p=1','-e','GOCACHE='+str(p/'go-build'),image,'go','test','-p=1','-c','-ldflags=-s -w','-tags=repository_integration','-o',str(p/'applications-compiled.test'),'./internal/modules/applications']
+with (p/'native-search-build.log').open('w') as log: subprocess.run(command,stdout=log,stderr=subprocess.STDOUT,check=True)
+helper=(p/'run-native.py').read_text().replace("    selection=os.environ", "    cases.append(('applications','./internal/modules/applications',[],'TestPortalConversationSearch'))\n    selection=os.environ")
+helper=helper.replace("'budgets':selection=='repository'", "'budgets':selection!='audit'")
+helper=helper.replace("str(output/(name+'.test'))", "str(output/(name+'-compiled.test'))")
+helper=helper.replace("    finally:\n        run('docker','stop'", "    finally:\n        with (output/'search-postgres-server.log').open('w') as log:\n            subprocess.run(['docker','logs',container],stdout=log,stderr=subprocess.STDOUT)\n        run('docker','stop'")
+runner=p/'run-native-search.py'; runner.write_text(helper)
+subprocess.run(['python3',str(runner)],env=os.environ|{'APP_NATIVE_CASE':'applications'},check=True)
+(p/'search-native-ok').write_text((p/'head').read_text())
+print('Native Portal conversation search acceptance recorded',flush=True)

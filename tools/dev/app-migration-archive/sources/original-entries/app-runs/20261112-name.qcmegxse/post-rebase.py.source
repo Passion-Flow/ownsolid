@@ -1,0 +1,82 @@
+from pathlib import Path
+import fcntl, os, stat, subprocess
+root=Path(__file__).resolve().parent
+repo=Path.cwd()
+carrier=Path('/private/tmp/ownsolid-workstation-full-gate.lock')
+info=carrier.lstat()
+assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+fd=os.open(carrier,os.O_RDWR|os.O_NOFOLLOW)
+mounted_by_this_run=False
+image_created_by_this_run=False
+try:
+    opened=os.fstat(fd)
+    assert (opened.st_dev,opened.st_ino)==(info.st_dev,info.st_ino)
+    fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    def run(*args,**kw): return subprocess.run(args,check=True,text=True,**kw)
+    assert not run('git','status','--porcelain',capture_output=True).stdout
+    with (root/'post-rebase-sync.log').open('w') as log:
+        run('git','fetch','origin',stdout=log,stderr=subprocess.STDOUT)
+        run('git','merge-base','--is-ancestor','origin/main','HEAD',stdout=log,stderr=subprocess.STDOUT)
+    import json
+    expected=json.loads((root/'native-schema59/proof.json').read_text())
+    approved=set((root/'reviewed-net-upstream-paths').read_text().splitlines())
+    changed=set(run('git','diff','--name-only',expected['head'],'HEAD','--','.',':(exclude)docs',capture_output=True).stdout.splitlines())
+    assert changed <= approved
+    unchanged=run('git','diff','21b86219','HEAD','--','services/control/internal/modules/applications','services/control/internal/modules/productagent','web','services/gateway',capture_output=True).stdout
+    assert not unchanged
+    python=run('uv','python','find','3.12',capture_output=True).stdout.strip()
+    env=os.environ|{'PYTHON':python,'PYTHONDONTWRITEBYTECODE':'1','GOPROXY':'off','GOSUMDB':'off','GOMAXPROCS':'2','GOFLAGS':'-p=1','VITEST_MAX_WORKERS':'2','CARGO_NET_OFFLINE':'true','CARGO_BUILD_JOBS':'2'}
+    with (root/'post-rebase-resources.log').open('w') as log: run('df','-h','/',stdout=log)
+    mount=Path('/private/tmp/ar-qcmegxse')
+    image=root/'post-scratch.sparseimage'
+    assert not mount.exists() and not image.exists()
+    with (root/'post-volume.log').open('w') as log:
+        run('hdiutil','create','-size','12g','-type','SPARSE','-fs','APFS','-volname','ownsolid-app-post',str(root/'post-scratch'),stdout=log,stderr=subprocess.STDOUT)
+        image_created_by_this_run=True
+        mount.mkdir()
+        run('hdiutil','attach','-nobrowse','-mountpoint',str(mount),str(image),stdout=log,stderr=subprocess.STDOUT)
+    mounted_by_this_run=True
+    (mount/'tmp').mkdir()
+    env['TMPDIR']=str(mount/'tmp')+'/'
+    for target in ('check','build'):
+        with (root/('post-rebase-'+target+'.log')).open('w') as log: run('make',target,env=env,stdout=log,stderr=subprocess.STDOUT)
+        print('Post-rebase '+target+' passed',flush=True)
+
+    binary=repo/'tools/audit-verify/audit-verify'
+    if binary.is_file():
+        assert not run('git','ls-files','--',str(binary),capture_output=True).stdout
+        binary.unlink()
+    with (root/'post-rebase-go.log').open('w') as log:
+        run('go','-C','services/control','test','./internal/modules/applications/...','./internal/modules/productagent/...','./internal/modules/models/...','./internal/operations/databaseaccess/...','./internal/platform/database/mysqlstore/...','./internal/platform/config/...','./cmd/server',env=env,stdout=log,stderr=subprocess.STDOUT)
+        for module in ('api','tools/release/offline','deploy/offline','tools/cli'):
+            run('go','-C',module,'test','./...',env=env,stdout=log,stderr=subprocess.STDOUT)
+    print('Post-rebase affected Go tests passed',flush=True)
+    import json
+    native=root/'native-schema59'
+    proof=json.loads((native/'proof.json').read_text())
+    assert set(run('git','diff','--name-only',proof['head'],'HEAD','--','.',':(exclude)docs',capture_output=True).stdout.splitlines()) <= approved
+    assert proof['architecture']=='amd64' and proof['network']=='none'
+    assert proof['passed']==['repository','http'] and (native/'removed').is_file()
+    print('Reused matching native schema 59 PostgreSQL and HTTPS proof',flush=True)
+    assert not run('git','status','--porcelain',capture_output=True).stdout
+    (root/'post-rebase-ok').write_text(run('git','rev-parse','HEAD',capture_output=True).stdout)
+    with (root/'post-rebase-publication.log').open('w') as log:
+        run('git','fetch','origin',stdout=log,stderr=subprocess.STDOUT)
+        run('git','merge-base','--is-ancestor','origin/main','HEAD',stdout=log,stderr=subprocess.STDOUT)
+        run('git','diff','--check',stdout=log,stderr=subprocess.STDOUT)
+        assert not run('git','status','--porcelain',capture_output=True).stdout
+        run('git','push','origin','HEAD:main',stdout=log,stderr=subprocess.STDOUT)
+        (root/'published').write_text(run('git','rev-parse','HEAD',capture_output=True).stdout)
+        print('Fast-forward publication passed',flush=True)
+finally:
+    mount=Path('/private/tmp/ar-qcmegxse')
+    image=root/'post-scratch.sparseimage'
+    if mounted_by_this_run and mount.exists():
+        mounted=' on '+str(mount)+' (' in subprocess.check_output(['mount'],text=True)
+        if mounted:
+            with (root/'post-volume-cleanup.log').open('w') as log:
+                subprocess.run(['hdiutil','detach',str(mount)],check=True,stdout=log,stderr=subprocess.STDOUT)
+        if mount.exists(): mount.rmdir()
+    if image_created_by_this_run and image.exists(): image.unlink()
+    os.close(fd)
+

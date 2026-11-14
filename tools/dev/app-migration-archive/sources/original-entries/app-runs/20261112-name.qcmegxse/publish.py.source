@@ -1,0 +1,39 @@
+from pathlib import Path
+import fcntl, os, stat, subprocess
+root=Path(__file__).resolve().parent
+repo=Path.cwd()
+carrier=Path('/private/tmp/ownsolid-workstation-full-gate.lock')
+info=carrier.lstat()
+assert stat.S_ISREG(info.st_mode) and info.st_uid==os.getuid()
+fd=os.open(carrier,os.O_RDWR|os.O_NOFOLLOW)
+try:
+    opened=os.fstat(fd)
+    assert (opened.st_dev,opened.st_ino)==(info.st_dev,info.st_ino)
+    fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    def run(*args,**kw):
+        return subprocess.run(args,check=True,text=True,**kw)
+    assert not run('git','status','--porcelain',capture_output=True).stdout
+    with (root/'publication.log').open('w') as log:
+        run('git','fetch','origin',stdout=log,stderr=subprocess.STDOUT)
+        upstream=run('git','diff','--name-only','1280ea79','origin/main',capture_output=True).stdout.splitlines()
+        (root/'new-upstream-paths').write_text('\n'.join(upstream)+'\n')
+        if any(not path.startswith('docs/') for path in upstream):
+            raise SystemExit('Upstream runtime changed; review and affected validation required before publication')
+        run('git','rebase','origin/main',stdout=log,stderr=subprocess.STDOUT)
+        changed=run('git','diff','--name-only','21b86219','HEAD',capture_output=True).stdout.splitlines()
+        assert all(path.startswith('docs/') for path in changed)
+        assert (root/'exit-status').read_text().strip()=='0'
+        assert (root/'local-postgres/removed').is_file()
+        python=run('uv','python','find','3.12',capture_output=True).stdout.strip()
+        run(python,'tools/dev/roadmap_progress.py',stdout=log,stderr=subprocess.STDOUT)
+        assert not run('git','status','--porcelain',capture_output=True).stdout
+        env=os.environ|{'PYTHON':python,'PYTHONDONTWRITEBYTECODE':'1','GOPROXY':'off','GOSUMDB':'off','GOMAXPROCS':'2','GOFLAGS':'-p=1','VITEST_MAX_WORKERS':'2'}
+        with (root/'final-check.log').open('w') as check: run('make','check',env=env,stdout=check,stderr=subprocess.STDOUT)
+        run('git','diff','--check',stdout=log,stderr=subprocess.STDOUT)
+        assert not run('git','status','--porcelain',capture_output=True).stdout
+        run('git','push','origin','HEAD:main',stdout=log,stderr=subprocess.STDOUT)
+        head=run('git','rev-parse','HEAD',capture_output=True).stdout.strip()
+        (root/'published').write_text(head+'\n')
+        print('Published',head)
+finally:
+    os.close(fd)

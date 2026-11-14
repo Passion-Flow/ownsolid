@@ -1,0 +1,18 @@
+from pathlib import Path
+import fcntl, os, stat, subprocess, sys
+root=Path(__file__).resolve().parent
+lock=Path('/private/tmp/ownsolid-workstation-full-gate.lock')
+info=lock.lstat()
+if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid():
+    raise SystemExit('Shared gate lock must be an existing regular file owned by this user')
+fd=os.open(lock,os.O_RDWR|os.O_NOFOLLOW)
+try:
+    opened=os.fstat(fd)
+    if (opened.st_dev,opened.st_ino)!=(info.st_dev,info.st_ino):
+        raise SystemExit('Shared gate lock changed before acquisition')
+    fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    (root/'lock-acquired').write_text(str(os.getpid())+'\n')
+    result=subprocess.run(['caffeinate','-dis','zsh',str(root/'gate.zsh'),str(root),sys.argv[1]],env=os.environ|{'APP_GATE_LOCK_HELD':str(root)})
+    raise SystemExit(result.returncode)
+finally:
+    os.close(fd)

@@ -1,0 +1,33 @@
+from pathlib import Path
+import fcntl
+import os
+import subprocess
+
+p = Path('/root/lane-app-runs-20261112.o0Ygio')
+source = p / 'source'
+lock = open('/run/lock/ownsolid-heavy.lock', 'a')
+fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+image = 'sha256:d9b6a1beb9474adc2a1ce842573639b44b2a0dd49b6669f51d3821baf9ec37c9'
+base = ['docker', 'run', '--rm', '--pull=never', '--network', 'none', '--cpus', '2',
+        '-v', str(p) + ':' + str(p), '-v', '/root/go/pkg/mod:/go/pkg/mod:ro', '-w', str(source),
+        '-e', 'GOPROXY=off', '-e', 'GOSUMDB=off', '-e', 'GOTOOLCHAIN=local',
+        '-e', 'GOOS=linux', '-e', 'GOARCH=amd64', '-e', 'CGO_ENABLED=0', '-e', 'GOMAXPROCS=2',
+        '-e', 'GOFLAGS=-p=1', '-e', 'GOCACHE=' + str(p / 'go-build'), image]
+commands = [
+    ['go', '-C', 'services/control', 'test', '-p=1', '-c', '-ldflags=-s -w',
+     '-o', str(p / 'audit-compiled.test'), './internal/modules/audit'],
+    ['go', 'build', '-p=1', '-ldflags=-s -w', '-trimpath', '-o',
+     str(p / 'audit-verify-compiled'), './tools/audit-verify/'],
+]
+with (p / 'native-audit-build.log').open('w') as log:
+    for command in commands:
+        subprocess.run(base + command, stdout=log, stderr=subprocess.STDOUT, check=True)
+print('Native offline audit fixture and verifier compiled', flush=True)
+helper = (p / 'run-native.py').read_text()
+helper = helper.replace("str(output/(name+'.test'))", "str(output/(name+'-compiled.test'))")
+helper = helper.replace("output/'audit-verify'", "output/'audit-verify-compiled'")
+runner = p / 'run-native-audit.py'
+runner.write_text(helper)
+subprocess.run(['python3', str(runner)], env=os.environ | {'APP_NATIVE_CASE': 'audit'}, check=True)
+(p / 'audit-native-ok').write_text((p / 'head').read_text())
+print('Native audit export and independent verifier acceptance recorded', flush=True)
