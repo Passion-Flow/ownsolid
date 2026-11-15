@@ -1,0 +1,11 @@
+- [MVP definition](mvp-definition.md) — every feature usable via one target, then demo and expand; real environments are best effort
+- [English-only repository](english-only-repository.md) — all files in English except internationalization, AGENTS.md rewrite in progress, CLAUDE.md points to it
+- [Positioning research](positioning-research.md) — 2026-11-04 report path; control-first positioning, pull-the-cable demo, export-based stickiness
+- [Product direction](product-direction.md) — positioning accepted, whole product fully offline, two products (ownsolid + license issuer), strict layout, all model types, 1Panel-like app deployment, DeepParser deep binding, license issuer, redesign
+- [Dev environment](dev-environment.md) — MacBook Pro primary, toolchain paths under ~/.local and ~/.cargo, Linux server later, no git identity yet
+- [GPU validation 2026-11-04](gpu-validation-2026-11-04.md) — vLLM and offline LoRA training worked on RTX 3090; egress, thinking and cache gaps to fix
+- [Roadmap workflow](roadmap-workflow.md) — work runs from docs/product/roadmap (435 items, P0 now); new chats in Development/ownsolid
+- [Knowledge is not a selling point](knowledge-not-a-selling-point.md) — a friend builds DeepParser; do not build or market a knowledge base, integration undecided
+- [Sales demo build](sales-demo-build.md) — Development/ownsolid-demo, all features clickable for the Nov 10 customer meeting; resume from its README
+- [Demo data modes](demo-data-modes.md) — no sample data or switch in ownsolid-demo; fresh installation, real data comes from one RTX 4090
+- [Machine reset 2026-11-15](machine-reset-2026-11-15.md) — server wiped to fresh install and Tailscale removed, MacBook reinstalled; the 76 MB backup directory is the only copy of what was not in a remote
