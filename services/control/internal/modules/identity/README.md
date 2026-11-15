@@ -270,3 +270,19 @@ retains its existing policy. This adds no workspace HTTP route. Action
 localization, contract metadata and installer collection remain with their
 owners. See [the identity consumer research](../../../../../docs/research/identity-audit-read-access.md)
 for the separately recorded actual qualification and remaining AUD-108 boundaries.
+
+## Agent gateway published-reader composition candidate
+
+The unmerged IAM construction candidate adds
+`NewAgentGatewayWithPublishedReaders` alongside the unchanged gateway constructor.
+It opens the configured dataset/training namespaces with the original owners'
+concrete read-only readers, binds the shared graph instances and opens no writer
+or worker. Its tenant comes from trusted installation startup. Constructor failure
+closes its own readers; the caller invokes `ClosePublishedReaders` only after
+stopping admission and draining/joining active requests and claims.
+
+This candidate requires the exact unmerged TRN/DAT producer. Its source and
+actual failed/deferred checks are recorded in the
+[construction research](../../../../../docs/research/identity-agent-published-readers.md).
+No current runtime registration, SQL claim, installed gateway, read-only mount,
+restricted-role, full-gate or fleet qualification follows from this source.
