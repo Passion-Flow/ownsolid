@@ -37,7 +37,7 @@ func (s *Service) verifyDamengStoredSecrets(ctx context.Context, q transaction.E
 			var text string
 			var args []any
 			if inventory.purpose == clientSecretPurpose {
-				text = "SELECT C.TENANT_ID,C.ID,C.ID,C.SECRET_KEY_ID,C.SECRET_NONCE,C.SECRET_CIPHERTEXT FROM SSO_CONNECTORS C JOIN INSTALLATION_STATE I ON I.TENANT_ID=C.TENANT_ID WHERE I.ID=1 AND I.BOOTSTRAP_COMPLETE=1"
+				text = "SELECT C.TENANT_ID,C.ID,C.ID,C.SECRET_KEY_ID,C.SECRET_NONCE,C.SECRET_CIPHERTEXT FROM SSO_CONNECTORS C JOIN INSTALLATION_STATE I ON I.TENANT_ID=C.TENANT_ID WHERE I.ID=1 AND I.BOOTSTRAP_COMPLETE=1 AND C.PROVIDER='gitea'"
 				if last != "" {
 					text += " AND C.ID>?"
 					args = append(args, last)

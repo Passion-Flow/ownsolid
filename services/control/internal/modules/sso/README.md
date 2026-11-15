@@ -176,3 +176,33 @@ concurrent nonce insert/commit behavior. A type-changing migration runs before
 serving and requires fresh pools, as a restarted Control does. Run them with
 the repository fixture's explicit PostgreSQL engine, protected DSN/setup files
 and unique disposable schema; see the [research and admission criteria](../../../../../docs/research/oidc-sign-in.md#postgresql-storage-prototype-boundary).
+
+## SAML completion and source owner candidate
+
+`NewSAMLCompletion` validates the selected PostgreSQL profile, identity, request
+and verified-result projections. It changes neither startup source selection nor
+route registration. `Complete` currently accepts only Portal results, reacquires
+the initiating ordinary session, rechecks credential/profile/source authority,
+links the exact identity and consumes the result with actual Identity issuance
+and audit in one transaction. It never accepts a tenant, user, email or verified
+claim envelope from a request body. Protected browser inputs redact themselves
+from JSON and diagnostic formatting.
+
+The owner implements Identity's existing `SourceGuard`. It dispatches from the
+immutable common connector protocol, preserves independent Gitea/local authority,
+and checks SAML binding/profile versions and the persisted source deadline.
+`Identity.IssueSessionUntilWithin` caps the actual session row and returned expiry
+without extending the ordinary configured maximum. Source timestamps read through
+PostgreSQL codecs are normalized to UTC; untrusted deadline inputs require the
+portable UTC microsecond domain.
+
+The formal schema must admit actual SAML connectors without OAuth credential
+placeholders and preserve both protocols' exact source/parent retention and
+single-issuance constraints. Legacy Gitea catalogs, secret inventories and
+adapters deliberately select their own protocol. The exact four-table/constraint,
+producer, source-composition and HTTP handoff is in the
+[SAML research](../../../../../docs/research/saml-sign-in.md). The default runtime
+selects no SAML owner or route. Real SQL completion/source races, protocol/browser
+composition, anonymous sign-in, Admin MFA, maintenance/restore, public contracts
+and product UI remain acceptance work. This owner is not a supported SAML sign-in
+claim or a completed IAM-104 item.
